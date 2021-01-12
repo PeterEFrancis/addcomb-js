@@ -1,0 +1,29 @@
+<html>
+  <head>
+    <script src="addComb.js"></script>
+  </head>
+  <body>
+    <button onclick="test();">test()</button>
+    <br><br>
+    <textarea id="verbose" rows='30' cols='100'></textarea>
+  </body>
+  <script>
+
+    const addComb = new AddComb(document.getElementById('verbose'));
+
+
+    function test() {
+      const d = new Date().getTime();
+
+      for (var i = 0; i < 100000; i++) {
+        // factorial(5)
+      }
+
+
+      console.log(new Date().getTime() - d);
+    }
+
+
+
+  </script>
+</html>
