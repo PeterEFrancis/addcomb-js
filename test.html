@@ -1,0 +1,789 @@
+<html>
+  <head>
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <title>addComb.js | Test Cases</title>
+
+    <script src="addComb.js"></script>
+
+    <style>
+      .signature {
+        font-size: 12pt;
+      }
+      .section-heading {
+        margin-bottom: 20px;
+      }
+      textarea {
+        width: 100%;
+        resize: none;
+        font-family: monospace;
+      }
+      .icon-d {
+        width: 2em;
+      }
+      .note {
+        border-left: 1px solid grey;
+      }
+
+      .section-link {
+        color: lightgrey;
+      }
+      .section-link, .section-link:visited, .section-link:hover, .section-link:active {
+        text-decoration:none;
+      }
+
+      .test-table > * > tr > * {
+        border: 1px solid black !important;
+      }
+      .test-table {
+        margin: 0px;
+      }
+
+      .br {
+        user-select: none;
+      }
+
+
+    </style>
+
+  </head>
+  <body>
+    <div class="container-fluid" style="margin-bottom: 300px;">
+      <div class="row">
+        <div class="col-xs-6">
+          <h1>addComb.js Test Cases</h1>
+        </div>
+        <div class="col-xs-6 text-right">
+          <button class="btn btn-lg btn-warning" style="margin-top: 20px;" onclick='location.reload(true)'>Reload</button>
+          <button class="btn btn-lg btn-primary" style="margin-top: 20px;" onclick='test_all()'>Run All Tests</button>
+        </div>
+      </div>
+
+      <div class="content">
+        <div class="col-md-12" id="content">
+          <!-- Generated HTML here -->
+        </div>
+      </div>
+
+
+
+    </div>
+  </body>
+  <script>
+
+
+    const TESTS = {
+      'bit_helpers': {
+        'num_ones': {
+          signature: 'num_ones(<0>)',
+          cases: [
+            {in: [0], out: 0},
+            {in: [1], out: 1},
+            {in: [2], out: 1},
+            {in: [3], out: 2},
+            {in: [4], out: 1},
+            {in: [5], out: 2},
+            {in: [2**15], out: 1}
+          ],
+        },
+        'trailing_zeros': {
+          signature: 'trailing_zeros(<0>)',
+          cases: [
+            {in: [0], out: 31},
+            {in: [8], out: 3},
+          ]
+        },
+        'leading_zeros': {
+          signature: 'leading_zeros(<0>)',
+          cases: [
+            {in: [2**27], out: 3},
+            {in: [0], out: 31},
+            {in: [8], out: 27}
+          ]
+        },
+        'cycle': {
+          signature: 'cycle(<0>,<1>,<2>)',
+          cases: [
+            {in: [8, 1, 5], out: 16},
+            {in: [14, 2, 5], out: 25}
+          ]
+        },
+        'cycle_rev': {
+          signature: 'cycle_rev(<0>,<1>,<2>)',
+          cases: [
+            {in: [8, 1, 5], out: 4},
+            {in: [14, 2, 5], out: 19}
+          ]
+        }
+      },
+      'other_helpers': {
+        'range': {
+          signature: 'range(<0>,<1>)',
+          cases: [
+            {in: [0,5], out: [0,1,2,3,4]},
+            {in: [-3,4], out: [-3,-2,-1,0,1,2,3]},
+            {in: [5,-6], out: []},
+            {in: [3,3], out: []}
+          ],
+        },
+        'sum': {
+          signature: 'sum(<0>)',
+          cases: [
+            {in: [[8,4,0]], out: 12},
+            {in: [[4,-3,1]], out: 2}
+          ],
+        },
+        'in_interval': {
+          signature: 'in_interval(<0>,<1>)',
+          cases: [
+            {in: [0,[-1,1]], out: true},
+            {in: [1,[-1,1]], out: true},
+            {in: [-2,[-1,1]], out: false},
+          ],
+        },
+        'arraysEqual': {
+          signature: 'arraysEqual(<0>,<1>)',
+          cases: [
+            {in: [[-1,1],[-1,1]], out: true},
+            {in: [[-1,0],[-1,1]], out: false}
+          ],
+        }
+      },
+      'math_functions': {
+        'D': {
+          signature: 'D(<0>)',
+          cases: [
+            {in: [1], out: [1]},
+            {in: [2], out: [1,2]},
+            {in: [15], out: [1,3,5,15]},
+            {in: [20], out: [1,2,4,5,10,20]}
+          ],
+        },
+        'd': {
+          signature: 'd(<0>)',
+          cases: [
+            {in: [1], out: 1},
+            {in: [2], out: 2},
+            {in: [15], out: 4},
+            {in: [20], out: 6}
+          ],
+        },
+        'choose': {
+          signature: 'choose(<0>,<1>)',
+          cases: [
+            {in: [10, 2], out: 45},
+            {in: [4, 0], out: 1},
+            {in: [5, 5], out: 1},
+            {in: [5, 6], out: 0},
+          ]
+        },
+        'a': {
+          signature: 'a(<0>,<1>)',
+          cases: [
+            {in: [3,3], out: 63},
+            {in: [3,4], out: 129},
+            {in: [4,3], out: 129},
+            {in: [0,1], out: 1},
+            {in: [5,5], out: 1683},
+          ],
+          tables: [
+            {
+              pg: 23,
+              id: 'a',
+              row_arg_num: 0,
+              col_arg_num: 1,
+              other_args: {},
+              col_heads: [0, 1, 2, 3, 4, 5, 6],
+              row_heads: [0, 1, 2, 3, 4, 5, 6],
+              data: [
+                [1, 1, 1, 1, 1, 1, 1],
+                [1, 3, 5, 7, 9, 11, 13],
+                [1, 5, 13, 25, 41, 61, 85],
+                [1, 7, 25, 63, 129, 231, 377],
+                [1, 9, 41, 129, 321, 681, 1289],
+                [1, 11, 61, 231, 681, 1683, 3653],
+                [1, 13, 85, 377, 1289, 3653, 8989]
+              ]
+            }
+          ]
+        },
+        'c': {
+          signature: 'c(<0>,<1>)',
+          cases: [
+            {in: [3,3], out: 38},
+            {in: [3,4], out: 88},
+            {in: [4,3], out: 66},
+            {in: [0,1], out: 1},
+            {in: [5,5], out: 1002},
+          ],
+          tables: [
+            {
+              pg: 24,
+              id: 'c',
+              row_arg_num: 0,
+              col_arg_num: 1,
+              other_args: {},
+              col_heads: [0, 1, 2, 3, 4, 5, 6],
+              row_heads: [0, 1, 2, 3, 4, 5, 6],
+              data: [
+                [1, 1, 1, 1, 1, 1, 1],
+                [0, 2, 4, 6, 8, 10, 12],
+                [0, 2, 8, 18, 32, 50, 72],
+                [0, 2, 12, 38, 88, 170, 292],
+                [0, 2, 16, 66, 192, 450, 912],
+                [0, 2, 20, 102, 360, 1002, 2364],
+                [0, 2, 24, 146, 608, 1970, 5336]
+              ]
+            }
+          ]
+        },
+        'factorial': {
+          signature: 'factorial(<0>)',
+          cases: [
+            {in: [1], out: 1},
+            {in: [2], out: 2},
+            {in: [3], out: 6},
+            {in: [4], out: 24},
+            {in: [5], out: 120},
+          ],
+        },
+        'gcd': {
+          signature: 'gcd(<0>,<1>)',
+          cases: [
+            {in: [1,5], out: 1},
+            {in: [2,4], out: 2},
+            {in: [3,7], out: 1},
+            {in: [12,16], out: 4},
+          ],
+        },
+        'gcd_arr': {
+          signature: 'gcd_arr(<0>)',
+          cases: [
+            {in: [[1,5]], out: 1},
+            {in: [[2,4,8]], out: 2},
+            {in: [[3,7,15]], out: 1},
+            {in: [[12,16,8,4]], out: 4},
+          ],
+        },
+        'rel_prime': {
+          signature: 'rel_prime(<0>)',
+          cases: [
+            {in: [[1,5]], out: true},
+            {in: [[2,4,8]], out: false},
+            {in: [[3,7,15]], out: false},
+            {in: [[12,16,8,4]], out: false},
+          ],
+        },
+        'add_in_G': {
+          signature: 'add_in_G(<0>,<1>,<2>)',
+          cases: [
+            {in: [[1,3,7],[5,3,2],[6,4,12]], out: [0,2,9]},
+            {in: [[-2,5],[0,1],[4,6]], out: [2,0]},
+          ],
+        },
+      },
+      'sides': {
+        'v': {
+          signature: 'v(<0>,<1>,<2>)',
+          tables: [
+            {
+              pg: 77,
+              id: 'section_1',
+              row_arg_num: 1,
+              col_arg_num: 0,
+              other_args: {2:3},
+              col_heads: [1, 3],
+              row_heads: range(2, 41),
+              data: [
+                [1, 1],
+                [1, 0],
+                [2, 2],
+                [2, 2],
+                [3, 3],
+                [2, 2],
+                [4, 4],
+                [3, 2],
+                [5, 5],
+                [4, 4],
+                [6, 6],
+                [4, 4],
+                [7, 7],
+                [6, 6],
+                [8, 8],
+                [6, 6],
+                [9, 9],
+                [6, 6],
+                [10, 10],
+                [7, 6],
+                [11, 11],
+                [8, 8],
+                [12, 12],
+                [10, 10],
+                [13, 13],
+                [9, 8],
+                [14, 14],
+                [10, 10],
+                [15, 15],
+                [10, 10],
+                [16, 16],
+                [12, 12],
+                [17, 17],
+                [14, 14],
+                [18, 18],
+                [12, 12],
+                [19, 19],
+                [13, 12],
+                [20, 20]
+              ]
+            }
+          ]
+        },
+        'v_signed': {
+          signature: 'v_signed(<0>,<1>)',
+          cases: [
+            {in: [12,3], out: 6},
+            {in: [18,3], out: 9},
+            {in: [24,4], out: 12}
+          ],
+        },
+        'u': {
+          signature: 'u(<0>,<1>,<2>)',
+          tables: [
+            {
+              pg: 83,
+              id: 'u',
+              row_arg_num: 2,
+              col_arg_num: 1,
+              other_args: {0:15},
+              col_heads: range(1, 16),
+              row_heads: range(2, 6),
+              data: [
+                [1, 3, 3, 5, 5, 9, 13, 15, 15, 15, 15, 15, 15, 15, 15],
+                [1, 3, 3, 5, 5, 12, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+                [1, 3, 3, 5, 5, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15],
+                [1, 3, 3, 5, 5, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15]
+              ]
+            }
+          ]
+        },
+        'f': {
+          signature: 'f(<0>,<1>,<2>)',
+        },
+        'delta': {
+          signature: 'delta(<0>,<1>,<2>,<3>)',
+        },
+        'f_restricted': {
+          signature: 'f_restricted(<0>,<1>,<2>,<3>)',
+        },
+        'u_restricted': {
+          signature: 'u_restricted(<0>,<1>,<2>)',
+          cases: [
+            {in: [10,6,3], out: 10, note: 'pg. 167'},
+            {in: [12,7,2], out: 11, note: 'pg. 167'},
+            {in: [15,8,3], out: 15, note: 'pg. 167'},
+            {in: [20,6,3], out: 10, note: 'pg. 167'},
+            {in: [20,11,2], out: 19, note: 'pg. 167'},
+            {in: [24,13,2], out: 23, note: 'pg. 167'},
+            {in: [28,15,2], out: 27, note: 'pg. 167'},
+            {in: [35,12,5], out: 35, note: 'pg. 167'},
+            {in: [40,11,2], out: 19, note: 'pg. 167'},
+          ],
+          tables: [
+            {
+              pg: 83,
+              id: 'u_restricted',
+              row_arg_num: 2,
+              col_arg_num: 1,
+              other_args: {0:15},
+              col_heads: range(1, 16),
+              row_heads: range(2, 6),
+              data: [
+                [null, null, 3, 5, 5, 9, 11, 13, 15, 15, 15, 15, 15, 15, 15],
+                [null, null, null, 4, 5, 8, 13, 15, 15, 15, 15, 15, 15, 15, 15],
+                [null, null, null, null, 5, 9, 13, 15, 15, 15, 15, 15, 15, 15, 15],
+                [null, null, null, null, null, 6, 11, 15, 15, 15, 15, 15, 15, 15, 15]
+              ]
+            }
+          ]
+        },
+      },
+      'FastSet': {
+        'has': {
+          signature: 'new FastSet(<0>).has(<1>)',
+          cases: [
+            {in: [2**3, 4], out: false},
+            {in: [2**3, 3], out: true},
+            {in: [2**3 + 2**17, 17], out: true},
+            {in: [2**31 - 1, 30], out: true}
+          ]
+        },
+        'add': {
+          signature: 'new FastSet(<0>).add(<1>).contents',
+        },
+      },
+      'Chapter A': {
+        'nu_restricted_cyclic': {
+          signature: 'new Group([<0>],<v>).nu(true,false,<1>,<2>,<3>)',
+          cases: [
+            {in: [10, 5, 2, true], out: 9, note: 'pg. 105'},
+            {in: [10, 5, 3, true], out: 9, note: 'pg. 105'},
+            {in: [14, 6, 2, true], out: 13, note: 'pg. 105'},
+            {in: [14, 6, 4, true], out: 13, note: 'pg. 105'},
+            {in: [15, 6, 2, true], out: 13, note: 'pg. 105'},
+            {in: [15, 6, 4, true], out: 13, note: 'pg. 105'},
+            {in: [16, 6, 2, true], out: 14, note: 'pg. 105'},
+            {in: [16, 6, 4, true], out: 14, note: 'pg. 105'},
+            {in: [17, 6, 2, true], out: 14, note: 'pg. 105'},
+            {in: [17, 6, 4, true], out: 14, note: 'pg. 105'},
+            {in: [18, 6, 2, true], out: 14, note: 'pg. 105'},
+            {in: [18, 6, 4, true], out: 14, note: 'pg. 105'},
+            {in: [18, 7, 2, true], out: 17, note: 'pg. 105'},
+            {in: [18, 7, 5, true], out: 17, note: 'pg. 105'},
+            {in: [19, 7, 2, true], out: 18, note: 'pg. 105'},
+            {in: [19, 7, 5, true], out: 18, note: 'pg. 105'},
+            {in: [20, 7, 2, true], out: 19, note: 'pg. 105'},
+            {in: [20, 7, 5, true], out: 19, note: 'pg. 105'},
+          ]
+        },
+      },
+      'Chapter B': {
+        'phi_restricted_interval_cyclic': {
+          signature: 'new Group([<0>],<v>).phi(true,false,<1>,<2>)',
+          cases: [
+            {in: [1, [0,2], true], out: 1, note: 'pg. 128'},
+            {in: [2, [0,2], true], out: 1, note: 'pg. 128'},
+            {in: [3, [0,2], true], out: 2, note: 'pg. 128'},
+            {in: [4, [0,2], true], out: 2, note: 'pg. 128'},
+            {in: [5, [0,2], true], out: 3, note: 'pg. 128'},
+            {in: [6, [0,2], true], out: 3, note: 'pg. 128'},
+            {in: [7, [0,2], true], out: 3, note: 'pg. 128'},
+            {in: [8, [0,2], true], out: 4, note: 'pg. 128'},
+            {in: [9, [0,2], true], out: 4, note: 'pg. 128'},
+            {in: [10, [0,2], true], out: 4, note: 'pg. 128'},
+            {in: [11, [0,2], true], out: 5, note: 'pg. 128'},
+            {in: [12, [0,2], true], out: 5, note: 'pg. 128'},
+            {in: [13, [0,2], true], out: 5, note: 'pg. 128'},
+            {in: [14, [0,2], true], out: 5, note: 'pg. 128'},
+            {in: [15, [0,2], true], out: 6, note: 'pg. 128'},
+            {in: [16, [0,2], true], out: 6, note: 'pg. 128'},
+            {in: [17, [0,2], true], out: 6, note: 'pg. 128'},
+            {in: [18, [0,2], true], out: 6, note: 'pg. 128'},
+            {in: [19, [0,2], true], out: 6, note: 'pg. 128'},
+            {in: [20, [0,2], true], out: 6, note: 'pg. 128'},
+            {in: [21, [0,2], true], out: 7, note: 'pg. 128'},
+            {in: [22, [0,2], true], out: 7, note: 'pg. 128'},
+            {in: [23, [0,2], true], out: 7, note: 'pg. 128'},
+            // {in: [24, [0,2], true], out: 7, note: 'pg. 128'},
+            // {in: [25, [0,2], true], out: 8, note: 'pg. 128'},
+            // {in: [26, [0,2], true], out: 8, note: 'pg. 128'},
+            // {in: [27, [0,2], true], out: 8, note: 'pg. 128'},
+            // {in: [28, [0,2], true], out: 8, note: 'pg. 128'},
+            // {in: [29, [0,2], true], out: 8, note: 'pg. 128'},
+            // {in: [30, [0,2], true], out: 8, note: 'pg. 128'},
+            // {in: [31, [0,2], true], out: 9, note: 'pg. 128'},
+            // {in: [32, [0,2], true], out: 9, note: 'pg. 128'},
+            // {in: [33, [0,2], true], out: 9, note: 'pg. 128'},
+            // {in: [34, [0,2], true], out: 9, note: 'pg. 128'},
+            // {in: [35, [0,2], true], out: 9, note: 'pg. 128'},
+            // {in: [36, [0,2], true], out: 9, note: 'pg. 128'},
+            // {in: [37, [0,2], true], out: 9, note: 'pg. 128'},
+          ]
+        },
+      },
+      'Chapter D': {
+        'rho_restricted_cyclic': {
+          signature: 'new Group([<0>],<v>).rho(true, false, <1>, <2>, <3>)',
+          cases: [
+            {in: [10,6,3,true], out: 9, note: 'pg. 167'},
+            {in: [12,7,2,true], out: 10, note: 'pg. 167'},
+            {in: [15,8,3,true], out: 14, note: 'pg. 167'},
+            {in: [20,6,3,true], out: 9, note: 'pg. 167'},
+            {in: [20,11,2,true], out: 18, note: 'pg. 167'},
+            // {in: [24,13,2], out: 22, note: 'pg. 167'},
+            // {in: [28,15,2], out: 26, note: 'pg. 167'},
+          ]
+        }
+      }
+    };
+
+    function get_table_input_args(table, row, col) {
+      let input = [];
+      input[table.row_arg_num] = table.row_heads[row];
+      input[table.col_arg_num] = table.col_heads[col];
+      for (let num in table.other_args) {
+        input[num] = table.other_args[num];
+      }
+      return input;
+    }
+
+    function parse(signature, input, def) {
+      // signature is a string of JS code
+      // <#> is replaced with the #th element of input
+      let s = signature;
+      for (let i in input) {
+        s = s.replaceAll("<" + i + ">", JSON.stringify(input[i]));
+      }
+      s = s.replaceAll('<v>','verbose');
+      if (def) {
+        s = s.replaceAll(/\<\d+\>/g,"");
+      }
+      return s;
+    }
+
+    function eval_v(string, id) {
+      let verbose = document.getElementById(id + '-verbose');
+      return eval(string);
+    }
+
+    function run_test(section, id) {
+      let test = TESTS[section][id];
+      let passed_cases = true;
+      let passed_tables = true;
+      if (test.cases) {
+        for (let i = 0; i < test.cases.length; i++) {
+          let calc_result = eval_v(parse(test.signature, test.cases[i].in), id, true);
+          document.getElementById(id + '-result-' + i).innerHTML = JSON.stringify(calc_result);
+          let icon = document.getElementById(id + '-icon-' + i);
+          if (JSON.stringify(calc_result) == JSON.stringify(test.cases[i].out)) {
+            icon.innerHTML = "&#9989;";
+          } else {
+            icon.innerHTML = "&#10060;";
+            passed_cases = false;
+          }
+        }
+      }
+      if (test.tables) {
+        for (let i = 0; i < test.tables.length; i++) {
+          let table_passed = true;
+          for (let r = 0; r < test.tables[i].data.length; r++) {
+            for (let j = 0; j < test.tables[i].data[r].length; j++) {
+              if (test.tables[i].data[r][j] != null) {
+                let td = document.getElementById(id + '-table-' + test.tables[i].id + '-row-' + r + '-col-' + j);
+                td.classList.remove('success', 'danger');
+                let result = eval_v(parse(test.signature, get_table_input_args(test.tables[i], r, j), true), id);
+                td.innerHTML = JSON.stringify(result);
+                if (JSON.stringify(test.tables[i].data[r][j]) == JSON.stringify(result)) {
+                  td.classList.add('success');
+                } else {
+                  td.classList.add('danger');
+                  table_passed = false;
+                }
+              }
+            }
+          }
+          let icon = document.getElementById(id + '-table-' + test.tables[i].id + '-icon');
+          if (table_passed) {
+            icon.innerHTML = "&#9989;";
+          } else {
+            icon.innerHTML = "&#10060;";
+            passed_cases = false;
+          }
+        }
+      }
+
+      let panel = document.getElementById('panel-' + id);
+      panel.classList.remove('panel-success', 'panel-danger', 'panel-warning');
+
+      if (!test.cases && !test.tables) {
+        panel.classList.add('panel-warning');
+      } else {
+        panel.classList.add(passed_cases && passed_tables ? 'panel-success' : 'panel-danger');
+      }
+    }
+
+    function test_all() {
+      for (let section in TESTS) {
+        for (let id in TESTS[section]) {
+          run_test(section, id);
+        }
+      }
+    }
+
+
+    // build HTML
+    const content = document.getElementById('content');
+    for (let section in TESTS) {
+      const _section = section;
+      let section_heading = document.createElement('h3'); section_heading.classList.add('section-heading'); section_heading.setAttribute('id', section);
+      let section_link = document.createElement('a'); section_link.classList.add('section-link'); section_link.setAttribute('href', '#' + section);
+      section_link.innerHTML = '&#182;';
+      section_heading.appendChild(document.createTextNode(section + " "));
+      section_heading.appendChild(section_link);
+      content.appendChild(document.createElement('hr'));
+      content.appendChild(section_heading);
+      let panel_group = document.createElement('div'); panel_group.classList.add('panel-group'); panel_group.setAttribute('id','accordion-' + section);
+      for (let id in TESTS[section]) {
+        const _id = id;
+        let test = TESTS[section][id];
+        let panel = document.createElement('div'); panel.classList.add('panel', 'panel-default'); panel.setAttribute('id','panel-' + id);
+        let panel_heading = document.createElement('div'); panel_heading.classList.add('panel-heading');
+        let header_row = document.createElement('div'); header_row.classList.add('row');
+        let header_col1 = document.createElement('div'); header_col1.classList.add('col-xs-6');
+        let header_col2 = document.createElement('div'); header_col2.classList.add('col-xs-6', 'text-right');
+        let panel_title = document.createElement('h4'); panel_title.classList.add('panel-title'); panel_title.setAttribute('id',id);
+        let collapse_link = document.createElement('a'); collapse_link.setAttribute('data-toggle','collapse'); collapse_link.setAttribute('data-parent','#accordion-' + section); collapse_link.setAttribute('href','#collapse-' + id);
+        let collapse = document.createElement('div'); collapse.classList.add('panel-collapse', 'collapse'); collapse.setAttribute('id','collapse-' + id);
+        let panel_body = document.createElement('div'); panel_body.classList.add('panel-body');
+        let sig = document.createElement('p'); sig.classList.add('signature');
+        let strong = document.createElement('strong');
+        let code = document.createElement('code');
+        let button = document.createElement('button'); button.classList.add('btn', 'btn-default', 'btn-xs'); button.onclick = function() {run_test(_section, _id)};
+        let row = document.createElement('div'); row.classList.add('row');
+        let col1 = document.createElement('div'); col1.classList.add('col-md-6');
+        let col2 = document.createElement('div'); col2.classList.add('col-md-6', 'text-right');
+        let textarea = document.createElement('textarea'); textarea.setAttribute('id', id + '-verbose'); textarea.readOnly = true; textarea.rows = 2 + (test.cases ? test.cases.length * 2 : 10);
+
+        panel_group.appendChild(panel);
+          panel.appendChild(panel_heading);
+            panel_heading.appendChild(header_row);
+              header_row.appendChild(header_col1);
+                header_col1.appendChild(panel_title);
+                  panel_title.appendChild(collapse_link);
+                    collapse_link.appendChild(document.createTextNode(id));
+              header_row.appendChild(header_col2);
+                header_col2.appendChild(button);
+                  button.appendChild(document.createTextNode('run test'));
+          panel.appendChild(collapse);
+            collapse.appendChild(panel_body);
+              panel_body.appendChild(sig);
+                sig.appendChild(strong);
+                  strong.appendChild(document.createTextNode('Code Signature: '));
+                sig.appendChild(code);
+                  code.appendChild(document.createTextNode(test.signature));
+
+
+        if (test.cases) {
+          let row = document.createElement('div'); row.classList.add('row');
+          let col1 = document.createElement('div'); col1.classList.add('col-md-6');
+          let col2 = document.createElement('div'); col2.classList.add('col-md-6', 'text-right');
+          let textarea = document.createElement('textarea'); textarea.setAttribute('id', id + '-verbose'); textarea.readOnly = true; textarea.rows = 2 + (test.cases ? test.cases.length * 2 : 10);
+          let cases_table = document.createElement('table'); cases_table.classList.add('table', 'table-condensed', 'table-responsive');
+          let cases_thead = document.createElement('thead');
+          let cases_trh = document.createElement('tr');
+          let cases_tbody = document.createElement('tbody');
+          let th1 = document.createElement('th');
+          let th2 = document.createElement('th');
+          let th3 = document.createElement('th');
+          let th4 = document.createElement('th'); th4.classList.add('icon-d');
+          let th5 = document.createElement('th'); th5.classList.add('note');
+
+          panel_body.appendChild(row);
+           row.appendChild(col1);
+            col1.appendChild(cases_table);
+              cases_table.appendChild(cases_thead);
+                cases_thead.appendChild(cases_trh);
+                  cases_trh.appendChild(th1);
+                    th1.appendChild(document.createTextNode('Input'));
+                  cases_trh.appendChild(th2);
+                    th2.appendChild(document.createTextNode('Expected'));
+                  cases_trh.appendChild(th3);
+                    th3.appendChild(document.createTextNode('Result'));
+                  cases_trh.appendChild(th4);
+                  cases_trh.appendChild(th5);
+                    th5.appendChild(document.createTextNode('Note'));
+              cases_table.appendChild(cases_tbody);
+           row.appendChild(col2);
+            col2.appendChild(textarea);
+
+          for (let i = 0; i < test.cases.length; i++) {
+            let tr = document.createElement('tr');
+            let td1 = document.createElement('td');
+            let td2 = document.createElement('td');
+            let td3 = document.createElement('td');
+            let td4 = document.createElement('td'); td4.classList.add('icon-d');
+            let td5 = document.createElement('td'); td5.classList.add('note');
+            td4.setAttribute('id', id + '-icon-' + i);
+            td3.setAttribute('id', id + '-result-' + i);
+            tr.appendChild(td1);
+            tr.appendChild(td2);
+            tr.appendChild(td3);
+            tr.appendChild(td4);
+            tr.appendChild(td5);
+            td1.innerHTML = test.cases[i].in.map(x => JSON.stringify(x)).join(", ");
+            td2.innerHTML = JSON.stringify(test.cases[i].out);
+            td3.appendChild(document.createTextNode("..."));
+            if (test.cases[i].note) {
+              td5.appendChild(document.createTextNode(test.cases[i].note));
+            }
+            cases_tbody.appendChild(tr);
+          }
+        }
+        if (test.cases && test.tables) {
+          panel_body.appendChild(document.createElement('br'));
+        }
+        if (test.tables) {
+          for (let i = 0; i < test.tables.length; i++) {
+            let table_panel = document.createElement('div'); table_panel.classList.add('panel', 'panel-default');
+            let table_panel_heading = document.createElement('div'); table_panel_heading.classList.add('panel-heading');
+            let table_panel_heading_row = document.createElement('div'); table_panel_heading_row.classList.add('row');
+            let table_panel_heading_col1 = document.createElement('div'); table_panel_heading_col1.classList.add('col-xs-6');
+            let a = document.createElement('a'); a.setAttribute('data-toggle','collapse'); a.setAttribute('href', '#collapse-' + id + '-table-' + test.tables[i].id);
+            let table_panel_heading_col2 = document.createElement('div'); table_panel_heading_col2.classList.add('col-xs-6', 'text-right');
+            let icon = document.createElement('span'); icon.setAttribute('id', id + '-table-' + test.tables[i].id + '-icon')
+            let table_panel_body = document.createElement('div'); table_panel_body.classList.add('panel-body', 'collapse'); table_panel_body.setAttribute('id', 'collapse-' + id + '-table-' + test.tables[i].id);
+            let table = document.createElement('table'); table.classList.add('table', 'table-condensed', 'test-table', 'table-responsive');
+            let thead = document.createElement('thead');
+            let tr = document.createElement('tr');
+            let th = document.createElement('th');
+            let tbody = document.createElement('tbody');
+
+            panel_body.appendChild(table_panel);
+              table_panel.appendChild(table_panel_heading);
+                table_panel_heading.appendChild(table_panel_heading_row);
+                  table_panel_heading_row.appendChild(table_panel_heading_col1);
+                    table_panel_heading_col1.appendChild(a);
+                      a.appendChild(document.createTextNode(test.tables[i].id + " (pg. " + test.tables[i].pg + ")"));
+                  table_panel_heading_row.appendChild(table_panel_heading_col2);
+                    table_panel_heading_col2.appendChild(icon);
+              table_panel.appendChild(table_panel_body);
+                table_panel_body.appendChild(table);
+                  table.appendChild(thead);
+                    thead.appendChild(tr);
+                      tr.appendChild(th);
+                        let input = [];
+                        for (let num in test.tables[i].other_args) {
+                          input[num] = test.tables[i].other_args[num];
+                        }
+                        th.appendChild(document.createTextNode(parse(test.signature, input)))
+                  table.appendChild(tbody);
+
+            for (let j = 0; j < test.tables[i].col_heads.length; j++) {
+              let th = document.createElement('th');
+              th.appendChild(document.createTextNode('<' + test.tables[i].col_arg_num + '> = ' + test.tables[i].col_heads[j]));
+              tr.appendChild(th);
+            }
+            for (let r = 0; r < test.tables[i].data.length; r++) {
+              let tr = document.createElement('tr');
+              let th = document.createElement('th');
+              th.appendChild(document.createTextNode('<' + test.tables[i].row_arg_num + '> = ' + test.tables[i].row_heads[r]));
+              tr.appendChild(th);
+              for (let j = 0; j < test.tables[i].data[r].length; j++) {
+                let td = document.createElement('td');
+                if (test.tables[i].data[r][j] != null) {
+                  td.setAttribute('id', id + '-table-' + test.tables[i].id + '-row-' + r + '-col-' + j);
+                  td.setAttribute('data-toggle', 'tooltip');
+                  td.setAttribute('data-container', 'body');
+                  td.setAttribute('title', '');
+                  td.setAttribute('data-original-title', test.tables[i].data[r][j]);
+                  td.appendChild(document.createTextNode('...'));
+                } else {
+                  td.style.backgroundColor = 'grey';
+                }
+                tr.appendChild(td);
+              }
+              tbody.appendChild(tr);
+            }
+          }
+        }
+
+      }
+      content.appendChild(panel_group);
+    }
+
+    $('[data-toggle="tooltip"]').tooltip();
+
+  </script>
+</html>

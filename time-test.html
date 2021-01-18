@@ -1,0 +1,73 @@
+<html>
+  <head>
+    <script src="addComb.js"></script>
+  </head>
+  <body>
+    <button onclick="test();">test()</button>
+    <br><br>
+    <textarea id="verbose" rows='30' style="width:100%" readonly></textarea>
+  </body>
+  <script>
+
+    const verbose = document.getElementById('verbose');
+
+    const g = new Group([29],verbose)
+
+
+
+
+
+    function test() {
+      console.log('start')
+      const num = 20;
+
+      const d = new Date().getTime();
+
+      for (var i = 0; i < num; i++) {
+        g.nu(false, false, 7, 2, false);
+      }
+
+
+      console.log((new Date().getTime() - d) / num);
+    }
+
+
+    // class Test {
+    //
+    //   constructor(start, stop, doneflag) {
+    //     this.start = start;
+    //     this.stop = stop;
+    //     this.curr = start;
+    //     this.doneflag = doneflag;
+    //   }
+    //
+    //   next() {
+    //     this.curr++;
+    //     if (this.curr == this.stop) {
+    //       this.doneflag = true;
+    //       return this.curr;
+    //     }
+    //     return this.curr;
+    //   }
+    //
+    //   *iterable() {
+    //     while (!this.doneflag) {
+    //       yield this.next();
+    //     }
+    //     return null;
+    //   }
+    //
+    // }
+    //
+    // var t = new Test(0,10,false);
+    //
+    // for (var el of t.iterable()) {
+    //   console.log(el);
+    // }
+
+
+
+
+
+  </script>
+</html>

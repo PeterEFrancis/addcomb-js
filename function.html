@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+  <head>
+
+    <meta charset="utf-8">
+    <link href="favicon.ico" rel="icon" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+      Addcomb | Function Calculator
+    </title>
+
+    <!-- addComb -->
+    <script src="addComb.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <!-- mathjax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']]
+        }
+      });
+    </script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML"></script>
+
+    <!-- font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <link crossorigin="anonymous" href= "https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" rel="stylesheet">
+
+    <style>
+      .input-group-el {
+        font-size: 18px;
+        line-height: 1.3333333;
+        height: 46px
+      }
+      select {
+        width: 50px !important;
+        padding: 5px !important;
+      }
+      textarea {
+        width: 100%;
+        height: max(100px, calc(100vh - 600px));
+        min-height: 100px;
+        resize: vertical;
+        font-family: monospace;
+      }
+    </style>
+
+  </head>
+  <body>
+
+    <nav class="navbar navbar-default bg-light" style="border-radius: 0px;">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">AddComb</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+          <ul class="nav navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="table.html">Table Generator</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="function.html">Function Calculator</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="sumset.html">Sumset Calculator</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h1>Function Calculator</h1>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:50px;">
+        <div class="col-md-1"></div>
+        <div class="col-md-10">
+          <div class="input-group">
+            <span class="input-group-addon input-group-el">
+              <select id="fchoice" class="form-control" onchange="set_function()">
+                <option value="">
+                  &nbsp;
+                </option>
+                <option value="nu">
+                  ν
+                </option>
+                <option value="phi">
+                  φ
+                </option>
+                <option value="sigma">
+                  σ
+                </option>
+                <option value="rho">
+                  ρ
+                </option>
+                <option value="chi">
+                  χ
+                </option>
+                <option value="tau">
+                  τ
+                </option>
+                <option value="mu">
+                  μ
+                </option>
+              </select>
+            </span>
+            <span class="input-group-addon input-group-el">
+              <span id="restricted-tex" hidden>$\hat{\!}$</span>
+              <span id="signed-tex" hidden>${\!}_\pm$</span>
+              <span id="signedrestricted-tex" hidden>$\hat{{\!}_\pm}$</span>
+              <span id="G" style="margin: -3px">$(G,$</span>
+            </span>
+            <input id="argument" class="form-control text-center input-group-el" placeholder="Select Function" type="string"/>
+            <span class="input-group-addon input-group-el">$)$</span>
+          </div>
+          <div class="row" style="margin-top: 30px;">
+            <div class="col-sm-4">
+              <label>
+                <input id="signed" type="checkbox" onclick="update_options();"></input>
+                Signed (${\!}_{\pm}$)
+              </label>
+              <br>
+              <label>
+                <input id="restricted" type="checkbox" onclick="update_options();"></input>
+                Restricted ($\hat{\;}$)
+              </label>
+            </div>
+            <div class="col-sm-8">
+              <label>
+                group factor orders:
+                <input class="form-control" id="group-in" placeholder="ex: 2,3,4" oninput="update_group(this)"></input>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-1"></div>
+      </div>
+
+      <div class="row" style="margin-top: 40px;">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+          <button id="calc" class="btn btn-primary btn-block btn-lg" onclick="calculate()" disabled>Calculate</button>
+          <p id="error" class="text-center" style="color: red; margin-top:5px;">&emsp;</p>
+        </div>
+        <div class="col-md-4"></div>
+      </div>
+
+      <div class="row" style="margin-top: 40px;">
+        <div class="col-md-12">
+          <textarea id="result" placeholder="result" readonly></textarea>
+        </div>
+      </div>
+
+
+      <div class="row" style="margin-top: 50px;">
+        <div class="col-md-3"></div>
+        <div class="col-md-6 text-center">
+          <h3 class="text-center" id="functions_and_notations">Functions and Notation</h3>
+          <h4 class="text-left">
+            Chapter A: Maximum sumset size
+          </h4>
+
+          <p>
+            A.1: Unrestricted sumsets: $$\nu(G,m,h)= \max \{ |hA| \mid A
+            \subseteq G, |A|=m\}$$ $$\nu(G,m,[0,s])= \max \{ |[0,s]A| \mid A
+            \subseteq G, |A|=m\}$$ $$\nu(G,m,\mathbb{N}_0)= \max \{ |\langle A
+            \rangle | \mid A \subseteq G, |A|=m\}$$ A.2: Unrestricted signed
+            sumsets: $$\nu_{\pm} (G,m,h)= \max \{ |h_{\pm} A| \mid A \subseteq
+            G, |A|=m\}$$ $$\nu_{\pm} (G,m,[0,s])= \max \{ |[0,s]_{\pm} A| \mid
+            A \subseteq G, |A|=m\}$$ $$\nu_{\pm} (G,m,\mathbb{N}_0)= \max \{
+            |\langle A \rangle | \mid A \subseteq G, |A|=m\}$$ A.3: Restricted
+            sumsets: $$\nu \hat{\;} (G,m,h)= \max \{ |h\hat{\;} A| \mid A
+            \subseteq G, |A|=m\}$$ $$\nu\hat{\;} (G,m,[0,s])= \max \{
+            |[0,s]\hat{\;} A| \mid A \subseteq G, |A|=m\}$$ $$\nu \hat{\;}
+            (G,m,\mathbb{N}_0)= \max \{ |\Sigma A | \mid A \subseteq G,
+            |A|=m\}$$ A.4: Restricted signed sumsets: $$\nu \hat{_{\pm}}
+            (G,m,h)= \max \{ |h \hat{_{\pm}} A| \mid A \subseteq G, |A|=m\}$$
+            $$\nu \hat{_{\pm}} (G,m,[0,s])= \max \{ |[0,s] \hat{_{\pm}} A| \mid
+            A \subseteq G, |A|=m\}$$ $$\nu \hat{_{\pm}} (G,m,\mathbb{N}_0)=
+            \max \{ |\Sigma _{\pm} A | \mid A \subseteq G, |A|=m\}$$
+          </p>
+
+          <h4 class="text-left">
+            Chapter B: Spanning sets
+          </h4>
+
+          <p>
+            B.1: Unrestricted sumsets: $$\phi(G,h)= \min \{ |A| \mid A
+            \subseteq G, hA=G\}$$ $$\phi(G,[0,s])= \min \{ |A| \mid A \subseteq
+            G, [0,s]A=G\}$$ $$\phi(G,\mathbb{N}_0)= \min \{ |A | \mid A
+            \subseteq G, \langle A \rangle=G\}$$ B.2: Unrestricted signed
+            sumsets: $$\phi_{\pm} (G,h)= \min \{ | A| \mid A \subseteq G,
+            h_{\pm} A=G\}$$ $$\phi_{\pm} (G,[0,s])= \min \{ | A| \mid A
+            \subseteq G, [0,s]_{\pm} A=G\}$$ $$\phi_{\pm} (G,\mathbb{N}_0)=
+            \min \{ |A | \mid A \subseteq G, \langle A \rangle=G\}$$ B.3:
+            Restricted sumsets: $$\phi \hat{\;} (G,h)= \min \{ | A| \mid A
+            \subseteq G, h\hat{\;} A=G\}$$ $$\phi\hat{\;} (G,[0,s])= \min \{ |
+            A| \mid A \subseteq G, [0,s]\hat{\;} A = G\}$$ $$\phi \hat{\;}
+            (G,\mathbb{N}_0)= \min \{ | A | \mid A \subseteq G, \Sigma A =
+            G\}$$ B.4: Restricted signed sumsets:} $$\phi \hat{_{\pm}} (G,h)=
+            \min \{ | A| \mid A \subseteq G, h \hat{_{\pm}} A = G\}$$ $$\phi
+            \hat{_{\pm}} (G,[0,s])= \min \{ | A| \mid A \subseteq G, [0,s]
+            \hat{_{\pm}} A = G\}$$ $$\phi \hat{_{\pm}} (G,\mathbb{N}_0)= \min
+            \{ | A | \mid A \subseteq G, \Sigma _{\pm} A = G\}$$
+          </p>
+
+          <h4 class="text-left">
+            Chapter C: Sidon sets
+          </h4>
+
+          <p id="text-left">
+            C.1: Unrestricted sumsets: $$\sigma(G,h)= \max \left \{ |A| \mid A
+            \subseteq G, |hA|=|\mathbb{N}_0^m (h)|={m+h-1 \choose h}\right \}$$
+            $$\sigma(G,[0,s])= \max \left \{ |A| \mid A \subseteq G,
+            |[0,s]A|=\Sigma_{h=0}^s |\mathbb{N}_0^m (h)|={m+s \choose s} \right
+            \}$$ C.2: Unrestricted signed sumsets: $$\sigma_{\pm} (G,h)= \max
+            \left \{ | A| \mid A \subseteq G, |h_{\pm} A|=|\mathbb{Z}^m
+            (h)|=c(h,m)\right \}$$ $$\sigma_{\pm} (G,[0,s])= \max \left \{ | A|
+            \mid A \subseteq G, |[0,s]_{\pm} A|=\Sigma_{h=0}^s |\mathbb{Z}^m
+            (h)|=a(m,s) \right \}$$ C.3: Restricted sumsets: $$\sigma \hat{\;}
+            (G,h)= \max \left \{ | A| \mid A \subseteq G, |h\hat{\;}
+            A|=|\hat{\mathbb{N}}_0^m (h)|={m \choose h}\right \}$$
+            $$\sigma\hat{\;} (G,[0,s])= \max \left \{ | A| \mid A \subseteq G,
+            |[0,s]\hat{\;} A| = \Sigma_{h=0}^s |\hat{\mathbb{N}}_0^m (h)|=
+            \Sigma_{h=0}^s {m \choose h} \right \}$$ $$\sigma \hat{\;}
+            (G,\mathbb{N}_0)= \max \left \{ | A | \mid A \subseteq G, |\Sigma A
+            |= \Sigma_{h=0}^m |\hat{\mathbb{N}}_0^m (h)|= 2^m \right \}$$ C.4:
+            Restricted signed sumsets: $$\sigma \hat{_{\pm}} (G,h)= \max \left
+            \{ | A| \mid A \subseteq G, |h \hat{_{\pm}} A| =
+            |\hat{\mathbb{Z}}^m (h)|={m \choose h} 2^h\right \}$$ $$\sigma
+            \hat{_{\pm}} (G,[0,s])= \max \left \{ | A| \mid A \subseteq G,
+            |[0,s] \hat{_{\pm}} A| = \Sigma_{h=0}^s |\hat{\mathbb{Z}}^m (h)|=
+            \Sigma_{h=0}^s {m \choose h} 2^h \right \}$$ $$\sigma \hat{_{\pm}}
+            (G,\mathbb{N}_0)= \max \left \{ | A | \mid A \subseteq G, |\Sigma
+            _{\pm} A |=\Sigma_{h=0}^m |\hat{\mathbb{Z}}^m (h)|= 3^m \right \}$$
+          </p>
+
+          <h4 class="text-left">
+            Chapter D: Minimum sumset size
+          </h4>
+
+          <p>
+            D.1: Unrestricted sumsets: $$\rho(G,m,h)= \min \{ |hA| \mid A
+            \subseteq G, |A|=m\}$$ $$\rho(G,m,[0,s])= \min \{ |[0,s]A| \mid A
+            \subseteq G, |A|=m\}$$ $$\rho(G,m,\mathbb{N}_0)= \min \{ |\langle A
+            \rangle | \mid A \subseteq G, |A|=m\}$$ D.2: Unrestricted signed
+            sumsets: $$\rho_{\pm} (G,m,h)= \min \{ |h_{\pm} A| \mid A \subseteq
+            G, |A|=m\}$$ $$\rho_{\pm} (G,m,[0,s])= \min \{ |[0,s]_{\pm} A| \mid
+            A \subseteq G, |A|=m\}$$ $$\rho_{\pm} (G,m,\mathbb{N}_0)= \min \{
+            |\langle A \rangle | \mid A \subseteq G, |A|=m\}$$ D.3: Restricted
+            sumsets: $$\rho \hat{\;} (G,m,h)= \min \{ |h\hat{\;} A| \mid A
+            \subseteq G, |A|=m\}$$ $$\rho\hat{\;} (G,m,[0,s])= \min \{
+            |[0,s]\hat{\;} A| \mid A \subseteq G, |A|=m\}$$ $$\rho \hat{\;}
+            (G,m,\mathbb{N}_0)= \min \{ |\Sigma A | \mid A \subseteq G,
+            |A|=m\}$$ D.4: Restricted signed sumsets: $$\rho \hat{_{\pm}}
+            (G,m,h)= \min \{ |h \hat{_{\pm}} A| \mid A \subseteq G, |A|=m\}$$
+            $$\rho \hat{_{\pm}} (G,m,[0,s])= \min \{ |[0,s] \hat{_{\pm}} A|
+            \mid A \subseteq G, |A|=m\}$$ $$\rho \hat{_{\pm}}
+            (G,m,\mathbb{N}_0)= \min \{ |\Sigma _{\pm} A | \mid A \subseteq G,
+            |A|=m\}$$
+          </p>
+
+          <h4 class="text-left">
+            Chapter E: The critical number
+          </h4>
+
+          <p id="text-left">
+            E.1: Unrestricted sumsets: $$\chi(G,h)= \min \{ m \mid A \subseteq
+            G, |A|=m \Rightarrow hA=G \}$$ $$\chi(G,[0,s])= \min \{ m\mid A
+            \subseteq G, |A|=m \Rightarrow [0,s]A=G \}$$
+            $$\chi(G,\mathbb{N}_0)= \min \{ m \mid A \subseteq G, |A|=m
+            \Rightarrow \langle A \rangle =G \}$$ E.2: Unrestricted signed
+            sumsets: $$\chi_{\pm} (G,h)= \min \{ m \mid A \subseteq G, |A|=m
+            \Rightarrow h_{\pm}A=G \}$$ $$\chi_{\pm} (G,[0,s])= \min \{ m \mid
+            A \subseteq G, |A|=m \Rightarrow [0,s]_{\pm}A=G \}$$ $$\chi_{\pm}
+            (G,\mathbb{N}_0)= \min \{ m \mid A \subseteq G, |A|=m \Rightarrow
+            \langle A \rangle=G \}$$ E.3: Restricted sumsets: $$\chi \hat{\;}
+            (G,h)= \min \{ m \mid A \subseteq G, |A|=m \Rightarrow h\hat{\;}A=G
+            \}$$ $$\chi\hat{\;} (G,[0,s])= \min \{ m \mid A \subseteq G, |A|=m
+            \Rightarrow [0,s] \hat{\;}A=G \}$$ $$\chi \hat{\;}
+            (G,\mathbb{N}_0)= \min \{ m \mid A \subseteq G, |A|=m \Rightarrow
+            \Sigma A=G \}$$ E.4: Restricted signed sumsets: $$\chi \hat{_{\pm}}
+            (G,h)= \min \{ m \mid A \subseteq G, |A|=m \Rightarrow
+            h\hat{_{\pm}} A=G \}$$ $$\chi \hat{_{\pm}} (G,[0,s])= \min \{ m
+            \mid A \subseteq G, |A|=m \Rightarrow [0,s] \hat{_{\pm}} A=G \}$$
+            $$\chi \hat{_{\pm}} (G,\mathbb{N}_0)= \min \{ m \mid A \subseteq G,
+            |A|=m \Rightarrow \Sigma \hat{_{\pm}} A=G \}$$
+          </p>
+
+          <h4 class="text-left">
+            Chapter F: Zero-sum-free sets
+          </h4>
+
+          <p id="text-left">
+            F.1: Unrestricted sumsets: $$\tau(G,h)= \max \{ |A| \mid A
+            \subseteq G, 0 \not \in hA\}$$ $$\tau(G,[1,t])= \max \{ |A| \mid A
+            \subseteq G, 0 \not \in [1,t]A\}$$ F.2: Unrestricted signed
+            sumsets: $$\tau_{\pm} (G,h)= \max \{ | A| \mid A \subseteq G, 0
+            \not \in h_{\pm} A\}$$ $$\tau_{\pm} (G,[1,t])= \max \{ | A| \mid A
+            \subseteq G, 0 \not \in [1,t]_{\pm} A\}$$ F.3: Restricted sumsets:
+            $$\tau \hat{\;} (G,h)= \max \{ | A| \mid A \subseteq G, 0 \not \in
+            h\hat{\;} A\}$$ $$\tau\hat{\;} (G,[1,t])= \max \{ | A| \mid A
+            \subseteq G, 0 \not \in [1,t]\hat{\;} A \}$$ $$\tau \hat{\;}
+            (G,\mathbb{N})= \max \{ | A | \mid A \subseteq G, 0 \not \in
+            [1,m]\hat{\;} A \}$$ F.4: Restricted signed sumsets: $$\tau
+            \hat{_{\pm}} (G,h)= \max \{ | A| \mid A \subseteq G, 0 \not \in h
+            \hat{_{\pm}} A \}$$ $$\tau \hat{_{\pm}} (G,[1,t])= \max \{ | A|
+            \mid A \subseteq G, 0 \not \in [1,t] \hat{_{\pm}} A \}$$ $$\tau
+            \hat{_{\pm}} (G,\mathbb{N})= \max \{ | A | \mid A \subseteq G, 0
+            \not \in [1,m] \hat{_{\pm}} A \}$$
+          </p>
+
+          <h4 class="text-left">
+            Chapter G: Sum-free sets
+          </h4>
+
+          <p id="text-left">
+            G.1: Unrestricted sumsets:} $$\mu(G,\{k,l\})= \max \{ |A| \mid A
+            \subseteq G, kA \cap lA = \emptyset\}$$ $$\mu(G,[0,s])= \max \{ |A|
+            \mid A \subseteq G, 0 \leq l &lt; k \leq s \Rightarrow kA \cap lA =
+            \emptyset\}$$ G.2: Unrestricted signed sumsets: $$\mu_{\pm}
+            (G,\{k,l\})= \max \{ | A| \mid A \subseteq G, k_{\pm}A \cap
+            l_{\pm}A = \emptyset\}$$ $$\mu_{\pm} (G,[0,s])= \max \{ | A| \mid A
+            \subseteq G, 0 \leq l &lt; k \leq s \Rightarrow k_{\pm}A \cap
+            l_{\pm}A = \emptyset\}$$ G.3: Restricted sumsets: $$\mu \hat{\;}
+            (G,\{k,l\})= \max \{ | A| \mid A \subseteq G, k\hat{\;}A \cap
+            l\hat{\;}A = \emptyset\}$$ $$\mu\hat{\;} (G,[0,s])= \max \{ | A|
+            \mid A \subseteq G, 0 \leq l &lt; k \leq s \Rightarrow k\hat{\;}A
+            \cap l\hat{\;}A = \emptyset \}$$ $$\mu \hat{\;} (G,\mathbb{N}_0)=
+            \max \{ | A | \mid A \subseteq G, 0 \leq l &lt; k \Rightarrow k
+            \hat{\;} A \cap l \hat{\;} A = \emptyset \}$$ G.4: Restricted
+            signed sumsets: $$\mu \hat{_{\pm}} (G,\{k,l\})= \max \{ | A| \mid A
+            \subseteq G, kA \cap lA = \emptyset \}$$ $$\mu \hat{_{\pm}}
+            (G,[0,s])= \max \{ | A| \mid A \subseteq G, 0 \leq l &lt; k \leq s
+            \Rightarrow k\hat{_{\pm}}A \cap l\hat{_{\pm}}A = \emptyset \}$$
+            $$\mu \hat{_{\pm}} (G,\mathbb{N}_0)= \max \{ | A | \mid A \subseteq
+            G, 0 \leq l &lt; k \Rightarrow k\hat{_{\pm}}A \cap l\hat{_{\pm}}A =
+            \emptyset \}$$
+          </p>
+        </div>
+      </div>
+
+
+      <script>
+
+        var last_group_string = '';
+        var group_ok = false;
+
+        function update_options() {
+          let signed = document.getElementById('signed').checked;
+          let restricted = document.getElementById('restricted').checked;
+          document.getElementById('restricted-tex').hidden = true;
+          document.getElementById('signed-tex').hidden = true;
+          document.getElementById('signedrestricted-tex').hidden = true;
+          if (signed || restricted) {
+            let el = (signed ? "signed" : "") + (restricted ? "restricted" : "") + "-tex";
+            document.getElementById(el).hidden = false;
+          }
+        }
+
+
+        function update_group(el) {
+
+          el.value = el.value.split('').filter(x=>'1234567890,'.includes(x)).join('');
+          el.value = el.value.replaceAll(',,',',');
+
+          if (el.value.split(",").filter(x => x != '').join(",") != last_group_string) {
+            last_group_string = el.value.split(",").filter(x => x != '').join(",");
+            let group_out = document.getElementById('G');
+            let groups = el.value.split(',');
+            try {
+              groups = groups
+              .map(x => x.trim())
+              .filter(x => x != "")
+              .map(x => Number(x))
+              .filter(x => x > 0)
+              .filter(x => Math.round(x) == x)
+              .map(x => "\\mathbb{Z}_{" + x + "}")
+              .join("\\times");
+              if (groups.length != "") {
+                group_out.innerHTML = "$(" + groups + ",$";
+                MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+              } else {
+                group_out.innerHTML = "$(G,$";
+              }
+              group_out.style.visibility = "visible";
+              group_ok = true;
+            } catch {
+              group_ok = false;
+              group_out.innerHTML = "$(G,$";
+              document.getElementById('error').innerHTML = 'Group Input Error: cannot understand input.';
+            }
+          }
+        }
+
+      function set_function(){
+        var funcText = document.getElementById("fchoice").value;
+        if (funcText.trim().length > 0) {
+          document.getElementById("argument").disabled = false;
+          document.getElementById("calc").disabled = false;
+        } else {
+          document.getElementById("argument").disabled = true;
+          document.getElementById("calc").disabled = true;
+          document.getElementById("argument").value = "";
+        }
+        if (funcText === "nu" || funcText === "rho"){
+          document.getElementById("argument").placeholder='m, H';
+        } else if (funcText === "phi" || funcText === "sigma" || funcText === "chi" || funcText === "tau"){
+          document.getElementById("argument").placeholder='H';
+        } else if (funcText === "mu"){
+          document.getElementById("argument").placeholder='k, l';
+        } else {
+          document.getElementById("argument").placeholder='Select Function';
+        }
+        document.getElementById("error").innerHTML = "";
+      }
+
+      const ONE_ARG_REG = /\d+$/;
+      const ONE_ARG_INTV_REG = /\[\d+,\d+\]$/;
+      const TWO_ARG_REG = /\d+,\d+$/;
+      const TWO_ARG_INTV_REG = /\d+,\[\d+,\d+\]$/;
+
+      function calculate() {
+        if (!group_ok) {
+          document.getElementById("error").innerHTML = "Enter a valid group.";
+          return;
+        }
+
+        let funcText = document.getElementById("fchoice").value;
+        // .options[func.selectedIndex].text;
+        let arg = document.getElementById("argument").value;
+        let interval = false;
+        arg = arg.replace(/\s/g, '');
+
+        if (funcText === "nu" || funcText === "rho") {
+          if (arg.match(TWO_ARG_INTV_REG)) {
+            interval = true;
+          } else {
+            document.getElementById("error").innerHTML = "Two arguments expected. <br/> Ex: 3,[0,5]";
+            return;
+          }
+        } else if (funcText === 'mu') {
+          if (arg.match(TWO_ARG_REG)) {
+            interval = false;
+          } else {
+            document.getElementById("error").innerHTML = "Two arguments expected. <br/> Ex: 3,2";
+            return;
+          }
+        } else { // All the other functexts are 1 argument
+          if (arg.match(ONE_ARG_REG)) {
+            interval = false;
+          } else if (arg.match(ONE_ARG_INTV_REG)) {
+            interval = true;
+            if (funcText === "sigma") {
+              // Special case
+              let special_regex = /\[(\d+),\d+\]$/;
+              let match = special_regex.exec(arg);
+              let lower_bound = match[1];
+              if (lower_bound !== '0') {
+                document.getElementById("error").innerHTML = "Sigma interval only allows a lower bound of 0 (" + lower_bound + " is not allowed)";
+                return;
+              } else {
+                arg = arg.replace("[", "").replace("]", "").replace(",0,", ",");
+              }
+            }
+          } else {
+            document.getElementById("error").innerHTML = "One argument expected. <br/> Ex: 5 or [0,3]";
+            return;
+          }
+        }
+
+        let e_args;
+
+        if (funcText === "nu" || funcText === "rho") {
+          e_args = [
+            Number(arg.slice(0,arg.indexOf(','))),
+            H_eval(arg.slice(arg.indexOf(',') + 1))
+          ];
+        } else if (funcText == "mu") {
+          e_args = [new Set(arg.split(',').map(x => Number(x)))];
+        } else {
+          e_args = [H_eval(args)];
+        }
+
+        let restricted = document.getElementById('restricted').checked;
+        let signed = document.getElementById('signed').checked;
+
+        let sizes = document.getElementById('group-in').value.split(',').map(x => Number(x));
+
+        let group = new Group(sizes, document.getElementById('result'));
+        group[funcText](restricted, signed, ...e_args, true);
+        document.getElementById("error").innerHTML = "";
+    }
+
+
+    </script>
+
+
+
+  </body>
+</html>

@@ -1,29 +1,195 @@
-<html>
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
   <head>
-    <script src="addComb.js"></script>
-  </head>
-  <body>
-    <button onclick="test();">test()</button>
-    <br><br>
-    <textarea id="verbose" rows='30' cols='100'></textarea>
-  </body>
-  <script>
+    <meta charset="utf-8">
+    <link href="favicon.ico" rel="icon" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    const addComb = new AddComb(document.getElementById('verbose'));
+    <title>Addcomb</title>
 
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
 
-    function test() {
-      const d = new Date().getTime();
+    <!-- mathjax -->
+    <script async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML'></script>
 
-      for (var i = 0; i < 100000; i++) {
-        // factorial(5)
+    <!-- font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <link crossorigin="anonymous" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity= "sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" rel="stylesheet">
+
+    <!-- funny -->
+    <script>
+      window.onload = function() {
+        const options = [
+          'A tool for the average Combinatorist...Combinatorialist...Combinater?',
+          'Spittin\' funky fresh sumsets since 2019',
+          'Is this thing on?',
+          'Formally known as bela.cool',
+          'Hello World!',
+          'LaTeX > Word',
+          '∃ place, ∃ woman, ∀ time giving birth',
+          'Next year in Hungary',
+          'HELP! I\'m trapped in an infinite loop!'
+        ];
+        document.getElementById("funny").innerHTML = options[Math.floor(Math.random() * (options.length))];
+      };
+    </script>
+
+    <style>
+      * {
+        font-family: 'Ubuntu', sans-serif;
       }
 
+      br {
+        user-select: none;
+      }
 
-      console.log(new Date().getTime() - d);
-    }
+      h4 {
+        margin-top: 30px;
+      }
+
+      #Bela{
+        border: 0pt solid black;
+        padding: 30px;
+        -moz-box-shadow:    -5px 10px 18px #888888;
+        -webkit-box-shadow: -5px 10px 18px #888888;
+        box-shadow:         -5px 10px 18px #888888;
+        margin-top: 20px;;
+        margin-bottom: 60px;
+      }
+
+      body {
+        margin-bottom: 100px;
+      }
+
+    </style>
+  </head>
+  <body>
+
+    <nav class="navbar navbar-default bg-light" style="border-radius: 0px;">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">AddComb</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+          <ul class="nav navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="table.html">Table Generator</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="function.html">Function Calculator</a>
+            </li>
+
+            <li class="nav-item">
+              <a class="nav-link" href="sumset.html">Sumset Calculator</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="jumbotron text-center" style="background-color: transparent; margin: 0px;">
+        <h1>AddComb</h1>
+        <p id="funny" class="lead">
+          <span style="visibility: none">...</span>
+        </p>
+      </div>
+    </div>
+
+    <div class="container" style="margin-bottom: 75px;">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <button class="btn btn-success btn-lg" onclick="location.href='table.html'" style="margin:15px">Table Generator</button>
+          <button class="btn btn-danger btn-lg" onclick="location.href='function.html'" style="margin:15px">Function Calculator</button>
+          <button class="btn btn-primary btn-lg" onclick="location.href='sumset.html'" style="margin:15px">Sumset Calculator</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="container">
+
+      <div class="row">
+        <div class="col-md-12">
+          <h2 class="text-center">About</h2>
+
+          <p class="text-justify">
+            This website has three Additive combinatorics tools free for use: a
+            function calculator and a table generator for a large list of the
+            functions listed <a href="function.html#functions_and_notations">here</a>,
+            as well as a general sumset calculator.
+            Please see below for more information.
+          </p>
+
+        <h4>Additive Combinatorics: A Menu of Research Problems</h4>
+
+        <p class="text-justify">
+          This work is inspired and based on the content of the book, <a href=
+          "https://www.amazon.com/Additive-Combinatorics-Research-Mathematics-Applications-ebook/dp/B07CQ31B98/ref=sr_1_fkmr0_1?keywords=Addative+Combinatorics%3A+A+Menu+of+Research+Problems&amp;qid=1554262069&amp;s=gateway&amp;sr=8-1-fkmr0"
+          target="_blank"><em>Addative Combinatorics: A Menu of Research
+          Problems</em></a>, by <a href=
+          "https://belabajnok.net"
+          target="_blank">Dr. Béla Bajnok</a>, who is currently a Professor of
+          Mathematics at Gettysburg College. Below is a word from Professor
+          Bajnok.
+        </p>
+
+        <div id="Bela">
+          <p class="text-center">
+            <em>This book deals with additive combinatorics, a vibrant area of
+            current mathematical research. Additive combinatorics—an offspring
+            of combinatorial number theory and additive number theory—can be
+            described as the study of combinatorial properties of sumsets
+            (collections of sums with terms from given subsets) in additive
+            structures. For example, given a subset \(A\) in an abelian group
+            \(G\), one can consider the sumset \(A+A\) consisting of all
+            two-term sums of the elements of \(A\), and then ask how small this
+            sumset may be; furthermore, given that \(A+A\) is small, one can
+            examine what can be said about the structure of \(A\).</em>
+          </p>
+
+          <p class="text-center">
+            <em>Additive combinatorics is a rather new field within mathematics
+            that is just now coming to its own; although some of its results
+            have been known for a very long time, many of its most fundamental
+            questions have only been settled recently or are still unsolved.
+            For example, the question about the minimum size of \(A+A\)
+            mentioned above was first determined in groups of prime order by
+            Cauchy in 1813 (then re-discovered by Davenport over a hundred
+            years later), but it has only been determined in the general
+            setting in the twenty-first century. For this and many other
+            reasons, additive combinatorics provides an excellent area for
+            research by students of any background: it has intriguing and
+            promising questions for everyone.</em>
+          </p>
+        </div>
 
 
+        <h4>About the Program and Programmers</h4>
 
-  </script>
+        <p>
+          <a href="https://PeterEFrancis.com"><strong>Peter E. Francis</strong></a> and
+          <strong>Matthew Torrence</strong> are Math Majors at Gettysburg College and began the
+          construction of this calculator in an introduction to research course
+          in 2019. The program is written in Javascript, and runs completely
+          in the browser.
+        </p>
+        <p>The source of this program can be found at <a href=
+          "https://github.com/PeterEFrancis/addComb-js" target="_blank">https://github.com/PeterEFrancis/addComb-js</a>.</p>
+        <p>An open source version of this program written in Rust and Python can be found at <a href=
+          "https://github.com/Torrencem/addcombq" target="_blank">https://github.com/Torrencem/addcombq</a>.
+        </p>
+
+      </div>
+    </div>
+  </body>
 </html>

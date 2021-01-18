@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link href="favicon.ico" rel="icon" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+      Addcomb | Sumset Calculator
+    </title>
+
+    <!-- addComb -->
+    <script src="addComb.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <!-- mathjax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']]
+        }
+      });
+    </script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML"></script>
+
+    <!-- font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+    <link crossorigin="anonymous" href= "https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" rel="stylesheet">
+
+    <style>
+      .input-group-el {
+        font-size: 18px;
+        line-height: 1.3333333;
+        height: 46px
+      }
+      textarea {
+        width: 100%;
+        height: max(100px, calc(100vh - 600px));
+        min-height: 100px;
+        resize: vertical;
+        font-family: monospace;
+      }
+    </style>
+
+  </head>
+  <body>
+
+    <nav class="navbar navbar-default bg-light" style="border-radius: 0px;">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">AddComb</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+          <ul class="nav navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="table.html">Table Generator</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="function.html">Function Calculator</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="sumset.html">Sumset Calculator</a>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h1>Sumset Calculator</h1>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:50px;">
+        <div class="col-md-3"></div>
+        <div class="col-md-6">
+          <div class="input-group">
+            <input id="H" class="form-control text-center input-group-el" placeholder="H" type="string"/>
+            <span id="options" class="input-group-addon input-group-el">
+              <span id="restricted-tex" hidden>$\hat{\!}$</span>
+              <span id="signed-tex" hidden>${\!}_\pm$</span>
+              <span id="signedrestricted-tex" hidden>$\hat{{\!}_\pm}$</span>
+              <span style="margin: -3px"></span>$\{$
+            </span>
+            <input id="set" class="form-control text-center input-group-el" placeholder="set" type="string" oninput="this.value=this.value.split('').filter(x=>'1234567890,()'.includes(x)).join('');"/>
+            <span class="input-group-addon input-group-el">$\}$</span>
+          </div>
+          <div class="row" style="margin-top: 30px;">
+            <div class="col-sm-6">
+              <label>
+                <input id="signed" type="checkbox" onclick="update_options();"></input>
+                Signed (${\!}_{\pm}$)
+              </label>
+              <br>
+              <label>
+                <input id="restricted" type="checkbox" onclick="update_options();"></input>
+                Restricted ($\hat{\;}$)
+              </label>
+            </div>
+            <div class="col-sm-6">
+              <label>
+                group factor orders:
+                <input class="form-control" id="group-in" placeholder="ex: 2,3,4" oninput="update_group(this)"></input>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3"></div>
+      </div>
+
+      <div class="row" style="margin-top: 15px;">
+        <div class="col-md-12 text-center">
+          <p class="lead text-center" style="margin-top: 10px;">
+            Ambient Group: <span id="group-out">...</span>
+          </p>
+        </div>
+      </div>
+
+      <div class="row">
+
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+          <button class="btn btn-primary btn-block btn-lg" onclick="calculate()">Calculate</button>
+          <p id="error" class="text-center" style="color: red; margin-top:5px;">&emsp;</p>
+        </div>
+        <div class="col-md-4"></div>
+      </div>
+
+      <div class="row" style="margin-top: 40px;">
+        <div class="col-md-12">
+          <textarea id="result" placeholder="result" readonly></textarea>
+        </div>
+      </div>
+
+
+
+    </div>
+
+
+
+    <script>
+
+      "use strict";
+
+      var last_group_string = "";
+      var group_ok = false;
+
+
+      function update_options() {
+        let signed = document.getElementById('signed').checked;
+        let restricted = document.getElementById('restricted').checked;
+        document.getElementById('restricted-tex').hidden = true;
+        document.getElementById('signed-tex').hidden = true;
+        document.getElementById('signedrestricted-tex').hidden = true;
+        if (signed || restricted) {
+          let el = (signed ? "signed" : "") + (restricted ? "restricted" : "") + "-tex";
+          document.getElementById(el).hidden = false;
+        }
+      }
+
+      function update_group(el) {
+
+        el.value = el.value.split('').filter(x=>'1234567890,'.includes(x)).join('');
+        el.value = el.value.replaceAll(',,',',');
+
+        if (el.value.split(",").filter(x => x != '').join(",") != last_group_string) {
+          last_group_string = el.value.split(",").filter(x => x != '').join(",");
+          let groups = el.value.split(',');
+          let group_out = document.getElementById('group-out');
+          group_out.style.visibility = "hidden";
+          try {
+            groups = groups
+            .map(x => x.trim())
+            .filter(x => x != "")
+            .map(x => Number(x))
+            .filter(x => x > 0)
+            .filter(x => Math.round(x) == x)
+            .map(x => "\\mathbb{Z}_{" + x + "}")
+            .join("\\times");
+            if (groups.length != "") {
+              group_out.innerHTML = "$" + groups + "$";
+              MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
+            } else {
+              group_out.innerHTML = "...";
+            }
+            group_out.style.visibility = "visible";
+            group_ok = true;
+          } catch {
+            group_ok = false;
+            group_out.innerHTML = "...";
+            document.getElementById('error').innerHTML = 'Group Input Error: cannot understand input.';
+          }
+        }
+      }
+
+
+      function calculate() {
+
+        if (!group_ok) {
+          document.getElementById('error').innerHTML = 'You must enter an ambient group.';
+        }
+
+        try {
+          let H = H_eval(document.getElementById('H').value);
+
+
+          let sizes = document.getElementById('group-in').value.split(",").map(x => Number(x));
+          let group = new Group(sizes);
+
+          let set_contents = document.getElementById('set').value;
+
+
+          let G;
+          if (group.SetClass == FastSet) {
+            set_contents = set_contents.split(',').map(x => Number(x));
+            G = group.n;
+          } else {
+            set_contents = null;
+            G = null;
+          }
+
+          let set = new group.SetClass;
+
+          for (let el of set_contents) {
+            set.add(el);
+          }
+
+          let restricted = document.getElementById('restricted').checked;
+          let signed = document.getElementById('signed').checked;
+          let interval = H_type(H) == 'interval';
+          let sumset_function = 'hfold_' + group.get_opt_string(restricted, signed, interval) + 'sumset';
+
+          let sumset = set[sumset_function](H,G).to_string();
+
+          document.getElementById('result').innerHTML += ">>> in " + group.to_string() + ", " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + set.to_string() + ' = ' + sumset + "\n";
+
+          document.getElementById('error').innerHTML = '&emsp;';
+        } catch (e) {
+          console.log(e);
+          document.getElementById('error').innerHTML = 'Input Error: cannot understand input.';
+        }
+      }
+
+
+
+    </script>
+
+  </body>
+</html>
