@@ -62,9 +62,9 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
           <ul class="nav navbar-nav">
-            <li class="nav-item">
+            <!-- <li class="nav-item">
               <a class="nav-link" href="table.html">Table Generator</a>
-            </li>
+            </li> -->
             <li class="nav-item">
               <a class="nav-link" href="function.html">Function Calculator</a>
             </li>
@@ -215,6 +215,7 @@
         try {
           let H = H_eval(document.getElementById('H').value);
 
+          console.log(H);
 
           let sizes = document.getElementById('group-in').value.split(",").map(x => Number(x));
           let group = new Group(sizes);

@@ -837,7 +837,7 @@ function H_to_string(H) {
   if (typeof(H) == "object") {
     if (H.constructor.name == 'Set') {
       return '{' + [...H.values()].toString() + '}';
-    } else if (H.constructor.name = 'Array'){
+    } else if (H.constructor.name == 'Array'){
       return '[' + H.toString() + ']';
     }
     unreachable();
