@@ -993,7 +993,7 @@ class Group {
   each_set_exact_zero(set_size) {
     return this.#each_set_exact_helper(this.n - 1, set_size - 1, 'next_zero');
   }
-  each_set_exact(set_size) {
+  each_set_exact_no_zero(set_size) {
     return this.#each_set_exact_helper(this.n - 1, set_size, 'next_no_zero');
   }
 
@@ -1117,24 +1117,26 @@ class Group {
           if (verbose) this.verbose_writer.a_write(this.n);
           return this.n;
         }
-        for (let m = 2; m < this.n; m++) {
+        for (let m = 2; m <= this.n; m++) {
           for (let a of this.each_set_exact(m)) {
-            if (verbose) {
-              this.verbose_writer.r_write("Found spanning set: " + a.to_string());
-              this.verbose_writer.a_write(m);
+            let sumset = a[sumset_function](H, this.n);
+            if (sumset.is_full(this.n)) {
+              if (verbose) {
+                this.verbose_writer.r_write("Found spanning set: " + a.to_string());
+                this.verbose_writer.a_write(m);
+              }
+              return m;
             }
-            return m;
           }
-          unreachable();
         }
-
+        unreachable();
       } else {
         if (signed) {
           if (this.n == 1) {
             if (verbose) this.verbose_writer.r_write("... = 1");
             return 1;
           }
-          for (let m = 2; m < this.n; m++) {
+          for (let m = 2; m <= this.n; m++) {
             for (let a of this.each_set_exact(m)) {
               if (a[sumset_function](H, this.n).is_full(this.n)) {
                 if (verbose) {
@@ -1156,7 +1158,7 @@ class Group {
           }
           if (verbose) this.verbose_writer.r_write("Using relation between phi and phi_interval to compute value");
 
-          let res = 1 + this.phi(false, false, [0, H], verbose);
+          let res = 1 + this.phi(false, false, [0, H], false);
 
           if (verbose) this.verbose_writer.a_write(res);
 
