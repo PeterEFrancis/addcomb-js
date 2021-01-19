@@ -2,9 +2,9 @@
 
 - `AddComb.js` is a javascript library for additive combinatorics calculation.
 - The functions and notations are based on a book by [Prof. Béla Bajnok](belabajnok.net).
-- The [Test Cases Page](https://PetereFrancis.com/addComb-js/test.html) serves as good reference for how to use the functions provided.
+- The [Test Cases Page](https://PetereFrancis.com/AddComb-js/test.html) serves as good reference for how to use the functions provided.
 
-#### The [Online Interface](https://PetereFrancis.com/addComb-js/index.html) allows for full functionality of `AddComb.js`.
+#### The [Online Interface](https://PetereFrancis.com/AddComb-js/index.html) allows for full functionality of `AddComb.js`.
 
 Below is a more technical description, if you are planning on using `AddComb.js` on your own.
 
