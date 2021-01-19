@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link href="favicon.ico" rel="icon" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+      Addcomb | Table Generator
+    </title>
+
+    <!-- addComb -->
+    <script src="addComb.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <!-- mathjax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']]
+        }
+      });
+    </script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML"></script>
+
+    <!-- font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+
+    <style>
+
+      #table-label-top {
+        font-size: 1.2em;
+        text-align: center;
+      }
+
+      /* fix slight alignment issue */
+      #table-t-left>input[type="number"], #table-t-right>input[type="number"] {
+        vertical-align: -4px;
+      }
+
+      #table-label-left {
+        width: 70px;
+        font-size: 1.2em;
+        text-align: center;
+        position: relative;
+      }
+
+      #side-size-fixer {
+        height: 120px;
+        width: 45px;
+      }
+
+      #table-label-left>.table-label {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      .table th, .table td {
+        text-align: center;
+        padding: 0.2em;
+      }
+
+      .bound-input {
+        width: 50px;
+        -moz-appearance: textfield; /* remove arrows (firefox) */
+      }
+
+      /* Remove arrows (webkit) */
+      .bound-input::-webkit-outer-spin-button, .bound-input::-webkit-inner-spin-button {
+          -webkit-appearance: none;
+          margin: 0;
+      }
+
+      #table-t-left {
+        float: left;
+      }
+
+      #table-t-right {
+        float: right;
+      }
+
+      #table-s-top {
+        top: 0 !important;
+        transform: translate(-50%, 50%) !important;
+      }
+
+      #table-s-bottom {
+        top: 100% !important;
+        transform: translate(-50%, -150%) !important;
+      }
+
+      .paren {
+        font-size: 1.5em;
+      }
+
+      .tdata {
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      .tdata:hover {
+        cursor: pointer;
+      }
+
+
+      .tdata[state="open"]:hover {background-color: #DDD;}
+
+      .tdata[state='timeout'] {background-color: #5bc0de}
+      .tdata[state='error'] {background-color: #d9534f}
+      .tdata[state='computing'] {background-color: #f0ad4e}
+      .tdata[state='closed'] {background-color: grey}
+      .tdata[state='closed']:hover {background-color: darkgrey;}
+
+
+
+      /*
+        state:
+          - open
+          - computing
+          - timeout
+          - closed: don't compute
+       */
+
+
+       #result {
+         width: 100%;
+         height: max(100px, calc(100vh - 600px));
+         min-height: 100px;
+         resize: vertical;
+         font-family: monospace;
+       }
+
+       textarea.export {
+         width: 100%;
+         height: 100px;
+         resize: none;
+         font-family: monospace;
+       }
+
+    </style>
+
+
+  </head>
+  <body>
+
+    <nav class="navbar navbar-default bg-light" style="border-radius: 0px;">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">AddComb</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+          <ul class="nav navbar-nav">
+            <!-- <li class="nav-item">
+              <a class="nav-link" href="table.html">Table Generator</a>
+            </li> -->
+            <li class="nav-item">
+              <a class="nav-link" href="function.html">Function Calculator</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="sumset.html">Sumset Calculator</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="table.html">Table Generator</a>
+            </li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li class="nav-item">
+              <a href="test.html">Test Cases</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h1>Table Generator</h1>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 40px; background-color:#f9f9f9;">
+        <div class="col-md-6" style="padding: 10px;">
+          <div class="row">
+            <div class="col-xs-12 text-center">
+              <strong>Function:</strong>
+              <select id="func-choice" onchange="set_function()">
+                <option value="">&nbsp;</option>
+                <option value="nu">ν</option>
+                <option value="phi">φ</option>
+                <option value="sigma">σ</option>
+                <option value="rho">ρ</option>
+                <option value="chi">χ</option>
+                <option value="tau">τ</option>
+                <option value="mu">μ</option>
+              </select>
+              <select id="options">
+                <option value="n">&nbsp;</option>
+                <option value="s">±</option>
+                <option value="r">^</option>
+                <option value="rs">±̂</option>
+              </select>
+              <span class="paren">(</span>
+              <input id="G" placeholder="G" style="width: 75px" oninput="check_group_var_string(this)"></input>
+              <input id="argument" placeholder="Select Function" oninput="check_arg_var_string(this)"></input>
+              <span class="paren">)</span>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-xs-12">
+              Enter the function arguments, using <strong>r</strong> and <strong>c</strong> for the row and column variables.
+              <ul>
+                <li>$G$: Group. Ex: 4 is $\mathbb{Z}_4$ and 2,3 or 2x3 is $\mathbb{Z}_2\times\mathbb{Z}_3$.</li>
+                <li>$m,l,k$: positive integer. Ex: 1,2,3.</li>
+                <li>$H$: set. Either an interval (e.g. [0,2]), or a single integer (3 is the set {3}).
+              </ul>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 text-center" style="padding: 10px;">
+          <label>Max time per cell (ms):
+            <input id="timeout" type="number" value="1000" oninput='num_only(this)'></input>
+          </label>
+          <br>
+          <button class="btn btn-primary" style="margin: 10px;" onclick="export_all(); $('#export-modal').modal()">
+            Export Table
+          </button>
+          <div id="export-modal" class="modal fade" role="dialog">
+            <div class="modal-dialog">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <button type="button" class="close" data-dismiss="modal">&times;</button>
+                  <h4 class="modal-title">Export Table</h4>
+                </div>
+                <div class="modal-body">
+                  <h4>Plain</h4>
+                  <textarea id="export-plain" class="export" readonly onclick="this.select()"></textarea>
+                  <h4>HTML</h4>
+                  <textarea id="export-HTML" class="export" readonly onclick="this.select()"></textarea>
+                  <h4>LaTeX</h4>
+                  <textarea id="export-LaTeX" class="export" readonly onclick="this.select()"></textarea>
+                  <h4>Markdown</h4>
+                  <textarea id="export-markdown" class="export" readonly onclick="this.select()"></textarea>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-3 text-center" style="padding: 10px;">
+          <button id="compute" class="btn btn-success" style="margin: 10px;" onclick="compute()" disabled>Compute</button><br>
+          <label>
+            <input id="verbose" type="checkbox"></input>
+            Verbose
+          </label>
+          <!-- <button id="stop" class="btn btn-danger" style="margin: 10px;">
+            <span class="glyphicon glyphicon-stop"></span>
+          </button>
+          <button id="next" class="btn btn-default" style="margin: 10px;">
+            <span class="glyphicon glyphicon-step-forward"></span>
+          </button> -->
+        </div>
+      </div>
+
+      <p id="error" class="text-center" style="color: red">&emsp;</p>
+
+      <div class="row" style="margin-top:10px;">
+        <div class="col-md-12">
+          <table class='table table-condensed table-bordered'>
+            <thead>
+              <tr>
+                <th>
+                  <button class="btn btn-primary" onclick="update_table()">
+                    <span class="glyphicon glyphicon-refresh"></span>
+                  </button>
+                </th>
+                <th id="table-label-top" colspan="11">
+                  <span id="table-t-left">
+                    <input id="col-min" class="bound-input" type="number" min="1" max="150" step="1" value="1" oninput='num_only(this)'>
+                  </span>
+                  <span class="table-label">
+                    c
+                  </span>
+                  <span id="table-t-right">
+                    <input id="col-max" class="bound-input" type="number" min="1" max="150" step="1" value="10" oninput='num_only(this)'>
+                  </span>
+                </th>
+              </tr>
+            </thead>
+            <tbody id="table-body">
+              <tr id="row-headers">
+                <th id="table-label-left" rowspan="11">
+                  <div id="side-size-fixer">&nbsp;</div>
+                  <span class="table-label" id="table-s-top">
+                    <input id="row-min" class="bound-input" type="number" min="1" max="150" step="1" value="1" oninput='num_only(this)'>
+                  </span>
+                  <span class="table-label">
+                    r
+                  </span>
+                  <span class="table-label" id="table-s-bottom">
+                    <input id="row-max" class="bound-input" type="number" min="1" max="150" step="1" value="10" oninput='num_only(this)'>
+                  </span>
+                </th>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top: 40px;">
+        <div class="col-md-12">
+          <textarea id="result" placeholder="verbose results" readonly></textarea>
+        </div>
+      </div>
+
+    </div>
+
+
+
+    <script>
+
+      const error = document.getElementById('error');
+
+      function update_table() {
+
+        let row_min = Number(document.getElementById('row-min').value);
+        let row_max = Number(document.getElementById('row-max').value);
+        let col_min = Number(document.getElementById('col-min').value);
+        let col_max = Number(document.getElementById('col-max').value);
+
+        if (row_max <= row_min || col_max <= col_min) {
+          error.innerHTML = 'maximum bounds must be strictly greater than minimum bounds';
+          return;
+        }
+
+        // reset col and row spans
+        document.getElementById('table-label-top').setAttribute('colspan', '' + (col_max - col_min + 2));
+        document.getElementById('table-label-left').setAttribute('rowspan', '' + (row_max - row_min + 2));
+
+        let tbody = document.getElementById('table-body');
+        let row_headers = document.getElementById('row-headers');
+
+        // remove the current contents
+        while (tbody.children.length > 1) {
+          tbody.removeChild(tbody.lastChild);
+        }
+        while (row_headers.children.length > 1) {
+          row_headers.removeChild(row_headers.lastChild);
+        }
+        row_headers.appendChild(document.createElement('th'));
+        for (let c = col_min; c <= col_max; c++) {
+          let th = document.createElement('th');
+          th.setAttribute('scope',"col");
+          th.innerHTML = c;
+          row_headers.appendChild(th);
+        }
+        for (let r = row_min; r <= row_max; r++) {
+          let tr = document.createElement('tr');
+          let th = document.createElement('th');
+          th.setAttribute('scope','row');
+          th.innerHTML = r;
+          tr.appendChild(th);
+          for (let c = col_min; c <= col_max; c++) {
+            let td = document.createElement('td');
+            td.classList.add('tdata');
+            td.setAttribute('id', 'cell-' + r + '-' + c);
+            td.setAttribute('state', 'open');
+            td.onclick = function() {
+              this.setAttribute('state', this.getAttribute('state') == 'open' ? 'closed' : 'open');
+            }
+            tr.appendChild(td);
+          }
+          tbody.appendChild(tr);
+        }
+      }
+
+      function set_function() {
+        let func = document.getElementById("func-choice").value;
+        let arg = document.getElementById("argument");
+
+        document.getElementById("compute").disabled = func.trim().length == 0;
+
+        if (func === "nu" || func === "rho") {
+          arg.placeholder='m, H';
+        } else if (func === "phi" || func === "sigma" || func === "chi" || func === "tau"){
+          arg.placeholder='H';
+        } else if (func === "mu") {
+          arg.placeholder='k, l';
+        } else {
+          arg.placeholder="Select Function";
+        }
+        document.getElementById("error").innerHTML = "&emsp;";
+      }
+
+      function compute() {
+
+        let num_rows = document.getElementById('table-body').children.length - 1;
+        let num_cols = document.getElementById('row-headers').children.length - 2;
+
+        let tbody = document.getElementById('table-body');
+
+        if (document.getElementById('timeout').value == "") {
+          document.getElementById('timeout').value = "1000";
+        }
+        let timeout = Number(document.getElementById('timeout').value);
+
+        for (let row = 0; row < num_rows; row++) {
+          for (let col = 0; col < num_cols; col++) {
+            const cell = tbody.children[row + 1].children[col + 1];
+            if (cell.getAttribute('state') == 'open' || cell.getAttribute('state') == 'error') {
+              cell.setAttribute('state', 'computing');
+              let r = Number(cell.getAttribute('id').split('-')[1]);
+              let c = Number(cell.getAttribute('id').split('-')[2]);
+              let rs = document.getElementById("options").options[document.getElementById("options").selectedIndex].text;
+              let comp = new Computer();
+              comp.start({
+                purpose: 'function',
+                info: {
+                  func:document.getElementById("func-choice").value,
+                  arg:document.getElementById("argument").value.replaceAll('r',r).replaceAll('c',c),
+                  restricted:rs.includes('r'),
+                  signed:rs.includes('s'),
+                  sizes:document.getElementById('G').value.replaceAll('r',r).replaceAll('c',c),
+                  verbose:document.getElementById('verbose').checked
+                },
+                oncomplete: function(response) {
+                  cell.innerHTML = response.data.res;
+                  cell.setAttribute('state', 'open');
+                  document.getElementById('error').innerHTML = '&emsp;';
+                  if (document.getElementById('verbose').checked) {
+                    document.getElementById('result').innerHTML += response.data.verbose_string;
+                  }
+                },
+                onerror: function(response) {
+                  console.log(response.data.msg);
+                  cell.setAttribute('state', 'error');
+                  document.getElementById("error").innerHTML = response.data.msg;
+                },
+                ontimeout: function(response) {
+                  cell.setAttribute('state', 'timeout');
+                  document.getElementById('error').innerHTML = '&emsp;';
+                  console.log(response.msg);
+                },
+                timeout: timeout
+              });
+            }
+          }
+        }
+      }
+
+
+      function format_string_left(content, total, fill) {
+        var out = String(content);
+        for (var s = 0; s < total - content.length; s++) {
+          out += fill;
+        }
+        return out;
+      }
+
+      function get_column_widths(contents) {
+        var col_widths = [];
+        for (var c = 0; c < contents[0].length; c++) {
+          col_widths[c] = 1;
+        }
+        for (var r = 0; r < contents.length; r++) {
+          for (var c = 0; c < contents[r].length; c++) {
+            if (contents[r][c].length > col_widths[c]) {
+              col_widths[c] = contents[r][c].length;
+            }
+          }
+        }
+        return col_widths;
+      }
+
+      function export_all() {
+        let contents = [];
+        let num_rows = document.getElementById('table-body').children.length - 1;
+        let num_cols = document.getElementById('row-headers').children.length - 2;
+        let tbody = document.getElementById('table-body');
+        for (let row = 0; row < num_rows; row++) {
+          contents[row] = [];
+          for (let col = 0; col < num_cols; col++) {
+            contents[row][col] = tbody.children[row + 1].children[col + 1].innerHTML;
+          }
+        }
+        document.getElementById('export-plain').innerHTML = JSON.stringify(contents);
+        document.getElementById('export-markdown').innerHTML = get_markdown(contents);
+        document.getElementById('export-LaTeX').innerHTML = get_LaTeX(contents);
+        document.getElementById('export-HTML').innerHTML = get_html(contents);
+      }
+
+      function get_markdown(contents) {
+        var col_widths = get_column_widths(contents);
+        var md = "|";
+        for (var c = 0; c < contents[0].length; c++) {
+          md += " " + format_string_left(contents[0][c], col_widths[c], " ") + " |";
+        }
+        md += "\n|";
+        for (var c = 0; c < contents[0].length; c++) {
+          md += ":" + format_string_left("", col_widths[c], "-") + ":|";
+        }
+        for (var r = 1; r < contents.length; r++) {
+          md += "\n|";
+          for (var c = 0; c < contents[r].length; c++) {
+            md += " " + format_string_left(contents[r][c], col_widths[c], " ") + " |"
+          }
+        }
+        return md;
+      }
+
+      function get_LaTeX(contents) {
+        var col_widths = get_column_widths(contents);
+        var ltx = "\\begin{table}[]\n\t\\begin{tabular}{";
+        for (var c = 0; c < contents[0].length; c++) {
+          ltx += " c "
+        }
+        ltx += "}";
+        for (var r = 0; r < contents.length; r++) {
+          ltx += "\n\t\t";
+          for (var c = 0; c < contents[r].length; c++) {
+            ltx += " " + format_string_left(contents[r][c], col_widths[c], " ");
+            if (c != contents[r].length - 1) {
+              ltx += " &";
+            }
+          }
+          ltx += " \\\\";
+        }
+        ltx += "\n\t\\end{tabular}\n\\end{table}";
+        return ltx;
+      }
+
+      function get_html(contents) {
+        var h = "<table>";
+        for (var r = 0; r < contents.length; r++) {
+          h += "\n\t<tr>"
+          for (var c = 0; c < contents[r].length; c++) {
+            h += "\n\t\t<td>" + contents[r][c] + "</td>";
+          }
+          h += "\n\t</tr>";
+        }
+        h += "\n</table>";
+        return h;
+      }
+
+
+      update_table()
+
+
+    </script>
+
+  </body>
+</html>

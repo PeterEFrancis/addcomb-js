@@ -801,11 +801,14 @@ function unreachable() {
 
 
 
+
+
+
 // H functions
 
 function H_eval(H) {
   if (H == '') {
-    throw new Error('H is not defined.');
+    return 1;
   }
   if (H.startsWith('{')) {
     return new Set(H.replace('{','').replace('}','').split(',').map(x => Number(x)));
@@ -851,9 +854,112 @@ function H_to_string(H) {
 
 
 
+// input check functions
+
+
+function check_group_string(el) {
+  el.value = el.value.split('').filter(x=>'1234567890,x'.includes(x)).join('');
+  if (el.value.includes(',') && el.value.includes('x')) {
+    let first_comma = el.value.indexOf(',');
+    let first_x = el.value.indexOf('x');
+    el.value = el.value.replaceAll(el.value[Math.max(first_comma, first_x)],el.value[Math.min(first_comma, first_x)])
+  }
+  el.value = el.value.replaceAll('xx','x').replaceAll(',,',',');
+}
+
+function check_arg_string(el) {
+  el.value = el.value.split('').filter(x => '1234567890,[]'.includes(x)).join('');
+  // todo: make this better
+}
+
+function check_group_var_string(el) {
+  el.value = el.value.split('').filter(x=>'1234567890,xrc'.includes(x)).join('');
+  if (el.value.includes(',') && el.value.includes('x')) {
+    let first_comma = el.value.indexOf(',');
+    let first_x = el.value.indexOf('x');
+    el.value = el.value.replaceAll(el.value[Math.max(first_comma, first_x)],el.value[Math.min(first_comma, first_x)])
+  }
+  el.value = el.value.replaceAll('xx','x').replaceAll(',,',',');
+}
+
+function check_arg_var_string(el) {
+  el.value = el.value.split('').filter(x => '1234567890,[]rc'.includes(x)).join('');
+  // todo: make this better
+}
+
+
+function check_set_string(el) {
+  el.value = el.value.split('').filter(x => '1234567890,()'.includes(x)).join('');
+}
+
+function num_only(el) {
+  el.value = el.value.split('').filter(x => '1234567890'.includes(x)).join('');
+}
+
+
+
+
 
 
 // main functions
+
+
+function parse_args(func, arg) {
+
+  const ONE_ARG_REG = /^\d+$/;
+  const ONE_ARG_INTV_REG = /^\[\d+,\d+\]$/;
+  const TWO_ARG_REG = /^\d+,\d+$/;
+  const TWO_ARG_INTV_REG = /^\d+,\[\d+,\d+\]$/;
+
+  arg = arg.replace(/\s/g, '');
+  if (func === "nu" || func === "rho") {
+    if (arg.match(TWO_ARG_INTV_REG)) {
+    } else {
+      throw new Error("Two arguments expected. <br/> Ex: 3,[0,5]");
+    }
+  } else if (func === 'mu') {
+    if (arg.match(TWO_ARG_REG)) {
+    } else {
+      throw new Error("Two arguments expected. <br/> Ex: 3,2");
+    }
+  } else { // All the other funcs are 1 argument
+    if (arg.match(ONE_ARG_REG)) {
+    } else if (arg.match(ONE_ARG_INTV_REG)) {
+      if (func === "sigma") {
+        // Special case
+        let special_regex = /\[(\d+),\d+\]$/;
+        let match = special_regex.exec(arg);
+        let lower_bound = match[1];
+        if (lower_bound !== '0') {
+          throw new Error("Sigma interval only allows a lower bound of 0 (" + lower_bound + " is not allowed)");
+        } else {
+          arg = arg.replace("[", "").replace("]", "").replace(",0,", ",");
+        }
+      }
+    } else {
+      throw new Error("One argument expected. <br/> Ex: 5 or [0,3]");
+    }
+  }
+
+  let e_args;
+
+  if (func === "nu" || func === "rho") {
+    e_args = [
+      Number(arg.slice(0,arg.indexOf(','))),
+      H_eval(arg.slice(arg.indexOf(',') + 1))
+    ];
+  } else if (func == "mu") {
+    e_args = [new Set(arg.split(',').map(x => Number(x)))];
+  } else {
+    e_args = [H_eval(arg)];
+  }
+
+  return e_args;
+
+}
+
+
+
 
 class Group {
 
@@ -892,18 +998,26 @@ class Group {
   }
 
   to_string() {
-    return "G[" + this.sizes.toString() + "]";
+    return 'G[' + this.sizes.join('x') + ']';
   }
 
   get_opt_string(restricted, signed, interval) {
     return (interval ? 'interval_' : '') + (restricted ? 'restricted_' : '') + (signed ? 'signed_' : '');
   }
 
+  get_G() {
+    // for use in sumset functions
+    // either the group order n (for FastSets) or sizes array (for GeneralSets)
+    if (this.SetClass == FastSet) {
+      return this.n;
+    }
+    return this.sizes;
+  }
 
   // chapter a
   nu(restricted, signed, m, H, verbose) {
     let interval = H_type(H) == "interval";
-    let opt_string = this.get_opt_string(inteval, restricted, signed);
+    let opt_string = this.get_opt_string(restricted, signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
 
     if (verbose) this.verbose_writer.c_write("nu" + VerboseWriter.disp_opt_string(restricted, signed) + "(" + this.to_string() + ", " + m + ", " + H_to_string(H) + ")");
@@ -1148,7 +1262,7 @@ class Group {
       for (let a of this.each_set_exact(m)) {
         if (!a[sumset_function](H,this.n).is_full(this.n)) {
           if (verbose) {
-            this.verbose_writer.r_write("For m=" + m + ", found " + a.to_string() + ", which doesn't give a full sumset");
+            this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which doesn't give a full sumset");
             this.verbose_writer.r_write("(gives:) " + H_to_string(H) + "A=" + a[sumset_function](H, this.n).to_string());
           }
           found = true;
@@ -1203,11 +1317,11 @@ class Group {
       for (let a of this.each_set_exact_no_zero(m)) {
         if (a[sumset_function](H,this.n).is_full(this.n).zero_free(n)) {
           if (verbose) {
-            this.verbose_writer.r_write("Found " + a.to_string() + "which gives a zero-free sumset");
+            this.verbose_writer.r_write("Found A=" + a.to_string() + "which gives a zero-free sumset");
             this.verbose_writer.r_write("(gives:) " + H_to_string(H) + "A=" + a[sumset_function](H, this.n).to_string());
             this.verbose_writer.a_write(m);
-            return m;
           }
+          return m;
         }
       }
     }
@@ -1237,11 +1351,11 @@ class Group {
         k_a.intersect(l_a.clone());
         if (k_a.is_empty()) {
           if (verbose){
-            this.verbose_writer.r_write("For m=" + m + ", found " + a.to_string() + ", which is sum-free");
+            this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which is sum-free");
             this.verbose_writer.r_write("(kA = " + a[sumset_function](k, this.n).to_string() + ", lA = " + l_a.to_string() + ")");
-            found = true;
-            break;
           }
+          found = true;
+          break;
         }
       }
       if (!found) {
@@ -1251,6 +1365,122 @@ class Group {
     }
     if (verbose) this.verbose_writer.a_write((this.n - 1));
     return this.n - 1;
+  }
+
+}
+
+
+
+
+
+
+// worker class and endpoints
+
+class Computer {
+  constructor(data) {
+    this.worker = new Worker('addComb.js');
+  }
+
+  start(data) {
+    // data is JSON with purpose, info, timeout, an ontimeout function, and an oncomplete function
+    const purpose = data.purpose;
+    const timeout = data.timeout;
+    // kill after timeout
+    const id = setTimeout(function() {
+      this.stop();
+      data.ontimeout({
+        msg: purpose + ' calculation timed out after ' + timeout + 'ms.'
+      });
+    }, data.timeout);
+    // on complete or error
+    this.worker.onmessage = function(msg) {
+      if (msg.data.type == 'complete') {
+        data.oncomplete(msg);
+      } else { // msg.data.type == 'error'
+        data.onerror(msg);
+      }
+
+      clearTimeout(id);
+    }
+    // start computation
+    this.worker.postMessage({
+      purpose: data.purpose,
+      info: data.info,
+    });
+  }
+
+  stop() {
+    this.worker.terminate();
+  }
+
+}
+
+
+self.onmessage = function (msg) {
+  try {
+    let data = msg.data;
+    let purpose = data.purpose;
+    let info = data.info;
+
+    if (purpose == 'sumset') {
+      let H = H_eval(info.H_string);
+      let set_contents = info.set_contents;
+      let restricted = info.restricted;
+      let signed = info.signed;
+      let sizes = info.sizes;
+      if (sizes == "") {
+        throw new Error('You must define a group');
+      } else {
+        sizes = sizes.replaceAll('x',',').split(",").map(x => Number(x))
+      }
+      let group = new Group(sizes);
+      if (group.SetClass == FastSet) {
+        set_contents = set_contents.split(',').filter(x => x.length != 0).map(x => Number(x));
+      } else {
+        set_contents = eval(set_contents.replaceAll('(','[').replaceAll(')',']'));
+      }
+
+      let set = new group.SetClass();
+      set.add_all(set_contents);
+      let G = group.get_G();
+      let interval = H_type(H) == 'interval';
+      let sumset_function = 'hfold_' + group.get_opt_string(restricted, signed, interval) + 'sumset';
+      let sumset = set[sumset_function](H,G);
+
+      self.postMessage({
+        type: 'complete',
+        sumset: sumset,
+        verbose_string: "in " + group.to_string() + ", " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + set.to_string() + ' = ' + sumset.to_string()
+      });
+    }
+    if (purpose == 'function') {
+      let func = info.func;
+      let arg = info.arg;
+      let restricted = info.restricted;
+      let signed = info.signed;
+      let sizes = info.sizes;
+      if (sizes == "") {
+        throw new Error('You must define a group');
+      } else {
+        sizes = sizes.replaceAll('x',',').split(",").map(x => Number(x))
+      }
+
+      let verbose_element = {innerHTML:''};
+      let group = new Group(sizes, verbose_element);
+      let e_args = parse_args(func, arg);
+      let res = group[func](restricted, signed, ...e_args, info.verbose);
+
+      self.postMessage({
+        type: 'complete',
+        res: res,
+        verbose_string: verbose_element.innerHTML
+      });
+    }
+  } catch (e) {
+    self.postMessage({
+      type: 'error',
+      msg: e.message
+    });
   }
 
 }

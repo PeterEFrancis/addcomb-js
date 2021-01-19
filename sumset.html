@@ -62,15 +62,19 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
           <ul class="nav navbar-nav">
-            <!-- <li class="nav-item">
-              <a class="nav-link" href="table.html">Table Generator</a>
-            </li> -->
             <li class="nav-item">
               <a class="nav-link" href="function.html">Function Calculator</a>
             </li>
             <li class="nav-item active">
               <a class="nav-link" href="sumset.html">Sumset Calculator</a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="table.html">Table Generator</a>
+            </li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li class="nav-item">
+              <a href="test.html">Test Cases</a></li>
           </ul>
         </div>
       </div>
@@ -94,7 +98,7 @@
               <span id="signedrestricted-tex" hidden>$\hat{{\!}_\pm}$</span>
               <span style="margin: -3px"></span>$\{$
             </span>
-            <input id="set" class="form-control text-center input-group-el" placeholder="set" type="string" oninput="this.value=this.value.split('').filter(x=>'1234567890,()'.includes(x)).join('');"/>
+            <input id="set" class="form-control text-center input-group-el" placeholder="set" type="string" oninput="check_set_string(this)"/>
             <span class="input-group-addon input-group-el">$\}$</span>
           </div>
           <div class="row" style="margin-top: 30px;">
@@ -132,7 +136,10 @@
 
         <div class="col-md-4"></div>
         <div class="col-md-4">
-          <button class="btn btn-primary btn-block btn-lg" onclick="calculate()">Calculate</button>
+          <button id="calc" class="btn btn-primary btn-block btn-lg" onclick="calculate()" disabled>
+            <span id="calc-text">Calculate</span>
+            <img id="loading" src="loading.gif" style="width: 1em; margin-top: -5px;" hidden/>
+          </button>
           <p id="error" class="text-center" style="color: red; margin-top:5px;">&emsp;</p>
         </div>
         <div class="col-md-4"></div>
@@ -197,57 +204,61 @@
             }
             group_out.style.visibility = "visible";
             group_ok = true;
+            document.getElementById('calc').disabled = false;
           } catch {
             group_ok = false;
+            document.getElementById('calc').disabled = true;
             group_out.innerHTML = "...";
             document.getElementById('error').innerHTML = 'Group Input Error: cannot understand input.';
           }
         }
+        if (group_ok && !document.getElementById('loading').hidden) {
+          set_calc_button(false);
+        }
       }
 
+      function set_calc_button(on) {
+        document.getElementById('calc').disabled = !on;
+        document.getElementById('calc-text').innerHTML = on ? 'Calculate' : 'Calculating...';
+        document.getElementById('loading').hidden = on;
+      }
 
       function calculate() {
 
         if (!group_ok) {
           document.getElementById('error').innerHTML = 'You must enter an ambient group.';
+          return;
         }
 
+        set_calc_button(false);
         try {
-          let H = H_eval(document.getElementById('H').value);
+          let computer = new Computer();
+          computer.start({
+            purpose: 'sumset',
+            info: {
+              H_string:document.getElementById('H').value,
+              set_contents:document.getElementById('set').value,
+              restricted:document.getElementById('restricted').checked,
+              signed:document.getElementById('signed').checked,
+              sizes:document.getElementById('group-in').value
+            },
+            oncomplete: function(response) {
+              set_calc_button(true);
+              document.getElementById('result').innerHTML += ">>> " + response.data.verbose_string + "\n";
+              document.getElementById('error').innerHTML = '&emsp;';
+            },
+            onerror: function(response) {
+              console.log(response.data.msg);
+              document.getElementById('error').innerHTML = response.data.msg;
+            },
+            ontimeout: function(response) {
+              set_calc_button(true);
+              document.getElementById('result').innerHTML += ">>> " + response.data.msg + "\n";
+              console.log(response.data.msg);
+            },
+            timeout: 60000
+          });
 
-          console.log(H);
-
-          let sizes = document.getElementById('group-in').value.split(",").map(x => Number(x));
-          let group = new Group(sizes);
-
-          let set_contents = document.getElementById('set').value;
-
-
-          let G;
-          if (group.SetClass == FastSet) {
-            set_contents = set_contents.split(',').map(x => Number(x));
-            G = group.n;
-          } else {
-            set_contents = null;
-            G = null;
-          }
-
-          let set = new group.SetClass;
-
-          for (let el of set_contents) {
-            set.add(el);
-          }
-
-          let restricted = document.getElementById('restricted').checked;
-          let signed = document.getElementById('signed').checked;
-          let interval = H_type(H) == 'interval';
-          let sumset_function = 'hfold_' + group.get_opt_string(restricted, signed, interval) + 'sumset';
-
-          let sumset = set[sumset_function](H,G).to_string();
-
-          document.getElementById('result').innerHTML += ">>> in " + group.to_string() + ", " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + set.to_string() + ' = ' + sumset + "\n";
-
-          document.getElementById('error').innerHTML = '&emsp;';
         } catch (e) {
           console.log(e);
           document.getElementById('error').innerHTML = 'Input Error: cannot understand input.';

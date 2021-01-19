@@ -31,7 +31,6 @@
     <!-- font -->
     <link rel="preconnect" href="https://fonts.gstatic.com">
     <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
-    <link crossorigin="anonymous" href= "https://use.fontawesome.com/releases/v5.7.2/css/all.css" integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" rel="stylesheet">
 
     <style>
       .input-group-el {
@@ -67,15 +66,19 @@
         </div>
         <div class="collapse navbar-collapse" id="myNavbar">
           <ul class="nav navbar-nav">
-            <!-- <li class="nav-item">
-              <a class="nav-link" href="table.html">Table Generator</a>
-            </li> -->
             <li class="nav-item active">
               <a class="nav-link" href="function.html">Function Calculator</a>
             </li>
             <li class="nav-item">
               <a class="nav-link" href="sumset.html">Sumset Calculator</a>
             </li>
+            <li class="nav-item">
+              <a class="nav-link" href="table.html">Table Generator</a>
+            </li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li class="nav-item">
+              <a href="test.html">Test Cases</a></li>
           </ul>
         </div>
       </div>
@@ -124,30 +127,23 @@
               <span id="restricted-tex" hidden>$\hat{\!}$</span>
               <span id="signed-tex" hidden>${\!}_\pm$</span>
               <span id="signedrestricted-tex" hidden>$\hat{{\!}_\pm}$</span>
-              <span id="G" style="margin: -3px">$(G,$</span>
+              <span style="margin: -3px">$($</span>
             </span>
-            <input id="argument" class="form-control text-center input-group-el" placeholder="Select Function" type="string"/>
+            <input id="G" class="form-control input-group-el" placeholder="G ex: 5, 2x3, or 3,6" type="string" oninput="check_group_string(this)"/>
+            <span class="input-group-addon input-group-el">$,$</span>
+            <input id="argument" class="form-control input-group-el" placeholder="Select Function" type="string"/>
             <span class="input-group-addon input-group-el">$)$</span>
           </div>
-          <div class="row" style="margin-top: 30px;">
-            <div class="col-sm-4">
-              <label>
-                <input id="signed" type="checkbox" onclick="update_options();"></input>
-                Signed (${\!}_{\pm}$)
-              </label>
-              <br>
-              <label>
-                <input id="restricted" type="checkbox" onclick="update_options();"></input>
-                Restricted ($\hat{\;}$)
-              </label>
-            </div>
-            <div class="col-sm-8">
-              <label>
-                group factor orders:
-                <input class="form-control" id="group-in" placeholder="ex: 2,3,4" oninput="update_group(this)"></input>
-              </label>
-            </div>
-          </div>
+          <br>
+          <label>
+            <input id="signed" type="checkbox" onclick="update_options();"></input>
+            Signed (${\!}_{\pm}$)
+          </label>
+          <br>
+          <label>
+            <input id="restricted" type="checkbox" onclick="update_options();"></input>
+            Restricted ($\hat{\;}$)
+          </label>
         </div>
         <div class="col-md-1"></div>
       </div>
@@ -155,7 +151,10 @@
       <div class="row" style="margin-top: 40px;">
         <div class="col-md-4"></div>
         <div class="col-md-4">
-          <button id="calc" class="btn btn-primary btn-block btn-lg" onclick="calculate()" disabled>Calculate</button>
+          <button id="calc" class="btn btn-primary btn-block btn-lg" onclick="calculate()" disabled>
+            <span id="calc-text">Calculate</span>
+            <img id="loading" src="loading.gif" style="width: 1em; margin-top: -5px;" hidden/>
+          </button>
           <p id="error" class="text-center" style="color: red; margin-top:5px;">&emsp;</p>
         </div>
         <div class="col-md-4"></div>
@@ -359,9 +358,6 @@
 
       <script>
 
-        var last_group_string = '';
-        var group_ok = false;
-
         function update_options() {
           let signed = document.getElementById('signed').checked;
           let restricted = document.getElementById('restricted').checked;
@@ -374,139 +370,75 @@
           }
         }
 
-
-        function update_group(el) {
-
-          el.value = el.value.split('').filter(x=>'1234567890,'.includes(x)).join('');
-          el.value = el.value.replaceAll(',,',',');
-
-          if (el.value.split(",").filter(x => x != '').join(",") != last_group_string) {
-            last_group_string = el.value.split(",").filter(x => x != '').join(",");
-            let group_out = document.getElementById('G');
-            let groups = el.value.split(',');
-            try {
-              groups = groups
-              .map(x => x.trim())
-              .filter(x => x != "")
-              .map(x => Number(x))
-              .filter(x => x > 0)
-              .filter(x => Math.round(x) == x)
-              .map(x => "\\mathbb{Z}_{" + x + "}")
-              .join("\\times");
-              if (groups.length != "") {
-                group_out.innerHTML = "$(" + groups + ",$";
-                MathJax.Hub.Queue(["Typeset",MathJax.Hub]);
-              } else {
-                group_out.innerHTML = "$(G,$";
-              }
-              group_out.style.visibility = "visible";
-              group_ok = true;
-            } catch {
-              group_ok = false;
-              group_out.innerHTML = "$(G,$";
-              document.getElementById('error').innerHTML = 'Group Input Error: cannot understand input.';
-            }
-          }
-        }
-
-      function set_function(){
-        var funcText = document.getElementById("fchoice").value;
-        if (funcText.trim().length > 0) {
-          document.getElementById("argument").disabled = false;
-          document.getElementById("calc").disabled = false;
-        } else {
-          document.getElementById("argument").disabled = true;
-          document.getElementById("calc").disabled = true;
-          document.getElementById("argument").value = "";
-        }
-        if (funcText === "nu" || funcText === "rho"){
-          document.getElementById("argument").placeholder='m, H';
-        } else if (funcText === "phi" || funcText === "sigma" || funcText === "chi" || funcText === "tau"){
-          document.getElementById("argument").placeholder='H';
-        } else if (funcText === "mu"){
-          document.getElementById("argument").placeholder='k, l';
-        } else {
-          document.getElementById("argument").placeholder='Select Function';
-        }
-        document.getElementById("error").innerHTML = "";
-      }
-
-      const ONE_ARG_REG = /\d+$/;
-      const ONE_ARG_INTV_REG = /\[\d+,\d+\]$/;
-      const TWO_ARG_REG = /\d+,\d+$/;
-      const TWO_ARG_INTV_REG = /\d+,\[\d+,\d+\]$/;
-
-      function calculate() {
-        if (!group_ok) {
-          document.getElementById("error").innerHTML = "Enter a valid group.";
-          return;
-        }
-
-        let funcText = document.getElementById("fchoice").value;
-        // .options[func.selectedIndex].text;
-        let arg = document.getElementById("argument").value;
-        let interval = false;
-        arg = arg.replace(/\s/g, '');
-
-        if (funcText === "nu" || funcText === "rho") {
-          if (arg.match(TWO_ARG_INTV_REG)) {
-            interval = true;
+        function set_function() {
+          var func = document.getElementById("fchoice").value;
+          if (func.trim().length > 0 || !document.getElementById('loading').hidden) {
+            document.getElementById("argument").disabled = false;
+            document.getElementById("calc").disabled = false;
           } else {
-            document.getElementById("error").innerHTML = "Two arguments expected. <br/> Ex: 3,[0,5]";
-            return;
+            document.getElementById("argument").disabled = true;
+            document.getElementById("calc").disabled = true;
+            document.getElementById("argument").value = "";
           }
-        } else if (funcText === 'mu') {
-          if (arg.match(TWO_ARG_REG)) {
-            interval = false;
+          if (func === "nu" || func === "rho"){
+            document.getElementById("argument").placeholder='m, H';
+          } else if (func === "phi" || func === "sigma" || func === "chi" || func === "tau"){
+            document.getElementById("argument").placeholder='H';
+          } else if (func === "mu"){
+            document.getElementById("argument").placeholder='k, l';
           } else {
-            document.getElementById("error").innerHTML = "Two arguments expected. <br/> Ex: 3,2";
-            return;
+            document.getElementById("argument").placeholder='Select Function';
           }
-        } else { // All the other functexts are 1 argument
-          if (arg.match(ONE_ARG_REG)) {
-            interval = false;
-          } else if (arg.match(ONE_ARG_INTV_REG)) {
-            interval = true;
-            if (funcText === "sigma") {
-              // Special case
-              let special_regex = /\[(\d+),\d+\]$/;
-              let match = special_regex.exec(arg);
-              let lower_bound = match[1];
-              if (lower_bound !== '0') {
-                document.getElementById("error").innerHTML = "Sigma interval only allows a lower bound of 0 (" + lower_bound + " is not allowed)";
-                return;
-              } else {
-                arg = arg.replace("[", "").replace("]", "").replace(",0,", ",");
-              }
-            }
-          } else {
-            document.getElementById("error").innerHTML = "One argument expected. <br/> Ex: 5 or [0,3]";
-            return;
+          document.getElementById("error").innerHTML = "";
+        }
+
+        function set_calc_button(on) {
+          document.getElementById('calc').disabled = !on;
+          document.getElementById('calc-text').innerHTML = on ? 'Calculate' : 'Calculating...';
+          document.getElementById('loading').hidden = on;
+        }
+
+
+        function calculate() {
+
+          set_calc_button(false);
+
+          try {
+            let computer = new Computer();
+            computer.start({
+              purpose: 'function',
+              info: {
+                func:document.getElementById("fchoice").value,
+                arg:document.getElementById("argument").value,
+                restricted:document.getElementById('restricted').checked,
+                signed:document.getElementById('signed').checked,
+                sizes:document.getElementById('G').value,
+                verbose:true
+              },
+              oncomplete: function(response) {
+                set_calc_button(true);
+                document.getElementById('result').innerHTML += response.data.verbose_string;
+                document.getElementById('error').innerHTML = '&emsp;';
+              },
+              onerror: function (response) {
+                set_calc_button(true);
+                console.log(response);
+                document.getElementById("error").innerHTML = response.data.msg;
+              },
+              ontimeout: function(response) {
+                set_calc_button(true);
+                document.getElementById('result').innerHTML += ">>> " + response.data.msg + "\n";
+                console.log(response.msg);
+              },
+              timeout: 60000
+            });
+
+          } catch (e) {
+            set_calc_button(true);
+            document.getElementById("error").innerHTML = e.message;
           }
         }
 
-        let e_args;
-
-        if (funcText === "nu" || funcText === "rho") {
-          e_args = [
-            Number(arg.slice(0,arg.indexOf(','))),
-            H_eval(arg.slice(arg.indexOf(',') + 1))
-          ];
-        } else if (funcText == "mu") {
-          e_args = [new Set(arg.split(',').map(x => Number(x)))];
-        } else {
-          e_args = [H_eval(args)];
-        }
-
-        let restricted = document.getElementById('restricted').checked;
-        let signed = document.getElementById('signed').checked;
-
-        let sizes = document.getElementById('group-in').value.split(',').map(x => Number(x));
-
-        let group = new Group(sizes, document.getElementById('result'));
-        group[funcText](restricted, signed, ...e_args, true);
-        document.getElementById("error").innerHTML = "";
-    }
 
 
     </script>
