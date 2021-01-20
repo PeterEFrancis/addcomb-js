@@ -415,7 +415,7 @@ class FastSet {
     if (h == 0) {
       return FastSet.singleton(0);
     }
-    return new FastSet(FastSet.#hfrs(this.contents, 1, h, n, FastSet.empty_set(), n + 1));
+    return new FastSet(FastSet#hfrs(this.contents, 1, h, n, FastSet.empty_set(), n + 1));
   }
   static #hfrs(stat, curr, h, n, restrictions, ceiling) {
     // A "1" in restrictions[i] means i has already been added
@@ -435,7 +435,7 @@ class FastSet {
         let newrestr = restrictions.clone();
         newrestr.add(shift);
 
-        let rec_call = FastSet.#hfrs(stat, cycled, h - 1, n, newrestr, shift);
+        let rec_call = FastSet#hfrs(stat, cycled, h - 1, n, newrestr, shift);
         total |= rec_call;
       }
 
@@ -447,7 +447,7 @@ class FastSet {
     if (h == 0) {
       return FastSet.singleton(0);
     }
-    return new FastSet(FastSet.#hfss(this.contents, 1, h, n, FastSet.empty_set(), FastSet.empty_set(), n + 1))
+    return new FastSet(FastSet#hfss(this.contents, 1, h, n, FastSet.empty_set(), FastSet.empty_set(), n + 1))
   }
   static #hfss(stat, curr, h, n, prestrictions, nrestrictions, ceiling)  {
     if (h == 0) {
@@ -465,7 +465,7 @@ class FastSet {
         let newnrestr = nrestrictions.clone();
         newnrestr.add(shift);
 
-        let rec_call = FastSet.#hfss(stat, cycled, h - 1, n, prestrictions.clone(), newnrestr, shift);
+        let rec_call = FastSet#hfss(stat, cycled, h - 1, n, prestrictions.clone(), newnrestr, shift);
         total |= rec_call;
       }
       if (!nrestrictions.has(shift)) {
@@ -473,7 +473,7 @@ class FastSet {
           let newprestr = prestrictions.clone();
           newprestr.add(shift);
 
-          let rec_call = FastSet.#hfss(stat, cycled, h - 1, n, newprestr, nrestrictions.clone(), shift);
+          let rec_call = FastSet#hfss(stat, cycled, h - 1, n, newprestr, nrestrictions.clone(), shift);
           total |= rec_call;
       }
       toadd &= toadd - 1;
@@ -487,7 +487,7 @@ class FastSet {
     if (h == 0) {
       return FastSet.singleton(0);
     }
-    return new FastSet(FastSet.#hfrss(this.contents, 1, h, n, FastSet.empty_set(), n + 1));
+    return new FastSet(FastSet#hfrss(this.contents, 1, h, n, FastSet.empty_set(), n + 1));
   }
   static #hfrss(stat, curr, h, n, restrictions, ceiling) {
     // A "1" in restrictions[i] means i has already been added
@@ -506,7 +506,7 @@ class FastSet {
         let newrestr = restrictions.clone();
         newrestr.add(shift);
 
-        let rec_call = FastSet.#hfrss(stat, cycled, h - 1, n, newrestr, shift);
+        let rec_call = FastSet#hfrss(stat, cycled, h - 1, n, newrestr, shift);
         total |= rec_call;
 
         // Also choose -cycled
@@ -514,7 +514,7 @@ class FastSet {
         newrestr = restrictions.clone();
         newrestr.add(shift);
 
-        rec_call = FastSet.#hfrss(stat, cycled, h - 1, n, newrestr, shift);
+        rec_call = FastSet#hfrss(stat, cycled, h - 1, n, newrestr, shift);
         total |= rec_call;
       }
 
@@ -545,7 +545,7 @@ class FastSet {
     return new FastSet(final_res);
   }
   hfold_interval_restricted_sumset(hs, n) {
-    return new FastSet(FastSet.#hfirs(this.contents, 1, hs[1], hs, n, FastSet.empty_set(), n + 1));
+    return new FastSet(FastSet#hfirs(this.contents, 1, hs[1], hs, n, FastSet.empty_set(), n + 1));
   }
   static #hfirs(stat, curr, h, hs, n, restrictions, ceiling)  {
     // A "1" in restrictions[i] means i has already been added
@@ -568,7 +568,7 @@ class FastSet {
         let newrestr = restrictions.clone();
         newrestr.add(shift);
 
-        let rec_call = FastSet.#hfirs(stat, cycled, h - 1, hs, n, newrestr, shift);
+        let rec_call = FastSet#hfirs(stat, cycled, h - 1, hs, n, newrestr, shift);
         total |= rec_call;
         // Check if total is full
         if ((~(total & ((1 << (n + 1)) - 1)) << (BIT_SIZE - n)) == 0) {
@@ -580,7 +580,7 @@ class FastSet {
     return total;
   }
   hfold_interval_signed_sumset(hs, n) {
-    return new FastSet(FastSet.#hfiss(this.contents, 1, hs[1], hs, n, FastSet.empty_set(), FastSet.empty_set(), n + 1));
+    return new FastSet(FastSet#hfiss(this.contents, 1, hs[1], hs, n, FastSet.empty_set(), FastSet.empty_set(), n + 1));
   }
   static #hfiss(stat, curr, h, hs, n, prestrictions, nrestrictions, ceiling) {
     if (h == 0) {
@@ -601,7 +601,7 @@ class FastSet {
         let newnrestr = nrestrictions.clone();
         newnrestr.add(shift);
 
-        let rec_call = FastSet.#hfiss(stat, cycled, h - 1, hs, n, prestrictions.clone(), newnrestr, shift);
+        let rec_call = FastSet#hfiss(stat, cycled, h - 1, hs, n, prestrictions.clone(), newnrestr, shift);
         total |= rec_call;
       }
       if (!nrestrictions.has(shift)) {
@@ -609,7 +609,7 @@ class FastSet {
         let newprestr = prestrictions.clone();
         newprestr.add(shift);
 
-        let rec_call = FastSet.#hfiss(stat, cycled, h - 1, hs, n, newprestr, nrestrictions.clone(), shift);
+        let rec_call = FastSet#hfiss(stat, cycled, h - 1, hs, n, newprestr, nrestrictions.clone(), shift);
         total |= rec_call;
       }
       toadd &= toadd - 1;
@@ -617,7 +617,7 @@ class FastSet {
     return total;
   }
   hfold_interval_restricted_signed_sumset(hs, n) {
-    return new FastSet(FastSet.#hfirss(this.contents, 1, hs[1], hs, n, FastSet.empty_set(), n + 1));
+    return new FastSet(FastSet#hfirss(this.contents, 1, hs[1], hs, n, FastSet.empty_set(), n + 1));
   }
   static #hfirss(stat, curr, h, hs, n, restrictions, ceiling) {
     // A "1" in restrictions[i] means i has already been added
@@ -639,7 +639,7 @@ class FastSet {
         let newrestr = restrictions.clone();
         newrestr.add(shift);
 
-        let rec_call = FastSet.#hfirss(stat, cycled, h - 1, hs, n, newrestr, shift);
+        let rec_call = FastSet#hfirss(stat, cycled, h - 1, hs, n, newrestr, shift);
         total |= rec_call;
 
         // Also choose -cycled
@@ -647,7 +647,7 @@ class FastSet {
         newrestr = restrictions.clone();
         newrestr.add(shift);
 
-        rec_call = FastSet.#hfirss(stat, cycled, h - 1, hs, n, newrestr, shift);
+        rec_call = FastSet#hfirss(stat, cycled, h - 1, hs, n, newrestr, shift);
         total |= rec_call;
       }
       toadd &= toadd - 1;
@@ -986,13 +986,13 @@ class Group {
   }
 
   each_set_exact(set_size) {
-    return this.#each_set_exact_helper(this.n, set_size, 'next');
+    return this#each_set_exact_helper(this.n, set_size, 'next');
   }
   each_set_exact_zero(set_size) {
-    return this.#each_set_exact_helper(this.n - 1, set_size - 1, 'next_zero');
+    return this#each_set_exact_helper(this.n - 1, set_size - 1, 'next_zero');
   }
   each_set_exact_no_zero(set_size) {
-    return this.#each_set_exact_helper(this.n - 1, set_size, 'next_no_zero');
+    return this#each_set_exact_helper(this.n - 1, set_size, 'next_no_zero');
   }
 
   to_string() {
