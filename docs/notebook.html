@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
+  <head>
+    <meta charset="utf-8">
+    <link href="favicon.ico" rel="icon" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+      Addcomb.js | Table Generator
+    </title>
+
+    <!-- addComb -->
+    <script src="AddComb.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <!-- mathjax -->
+    <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']]
+        }
+      });
+    </script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML"></script>
+
+    <!-- font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+
+    <!-- codemirror -->
+    <script src="codemirror/lib/codemirror.js"></script>
+    <link rel="stylesheet" href="codemirror/lib/codemirror.css">
+    <script src="codemirror/mode/javascript/javascript.js"></script>
+
+    <!-- FileSaver -->
+    <script src="FileSaver.js"></script>
+
+    <style>
+
+      body {
+        min-width: 500px;
+      }
+
+      .verbose {
+        width: 100%;
+        font-family: monospace;
+        margin-top: 4px;
+      }
+
+      .CodeMirror {
+        height: 100%;
+        border: 1px solid #ccc;
+      }
+
+      .code-div.focused .CodeMirror {
+        border: 1px solid #02b1fc;
+      }
+
+      .side-tag {
+        color: lightgrey;
+        user-select: none;
+        padding-right: 0px;
+        padding-left: 15px;
+        padding-top: 4px;
+        font-family: monospace;
+        white-space: nowrap;
+        width: 65px !important;
+      }
+
+
+      .output-div, .code-div {
+        padding-left: 0px;
+        padding-right: 5px;
+        width: calc(100% - 65px) !important;
+        overflow-x:scroll;
+        white-space: nowrap;
+      }
+
+      .hidden {
+        visibility: hidden;
+      }
+
+      .cell {
+        padding-left: 15px;
+        margin-bottom: 20px;
+      }
+
+      .cell.selected {
+        border-left: 5px solid #02b1fc;
+        padding-left: 10px;
+      }
+
+      .cell.selected .code-tag {
+        color: #02b1fc;
+      }
+      .cell.selected .output-tag {
+        color: #b57603;
+      }
+
+
+
+
+    </style>
+
+
+  </head>
+  <body>
+
+    <nav class="navbar navbar-default bg-light" style="border-radius: 0px;">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">AddComb.js</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+          <ul class="nav navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="function.html">Function Calculator</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="sumset.html">Sumset Calculator</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="table.html">Table Generator</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="notebook.html">Notebook</a>
+            </li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li class="nav-item">
+              <a href="test.html">Test Cases</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row">
+        <div class="col-md-12 text-center">
+          <h1>Notebook</h1>
+          <p class="text-center">This notebook is for direct use of the functions provided in AddComb.js. For verbose printing of functions, use the variable <code>verbose</code>. The <code>print()</code> function can be used to print to the cell output.</p>
+        </div>
+      </div>
+
+      <div class="row" style="margin-bottom: 40px; margin-top: 40px; background-color:lightgrey; padding: 10px;">
+        <div class="col-xs-6">
+          <button class="btn btn-success" onclick="run(selected_cell)">
+            <span class="glyphicon glyphicon-play"></span>
+          </button>
+          <button class="btn btn-default" onclick="new_cell()">
+            <span class="glyphicon glyphicon-plus"></span>
+          </button>
+        </div>
+        <div class="col-xs-6 text-right">
+          <button class="btn btn-warning" data-toggle="modal" data-target="#open-modal">
+            <span class="glyphicon glyphicon-folder-open"></span>
+          </button>
+          <button class="btn btn-primary" onclick="SaveAsFile(JSON.stringify(contents), 'AddComb Notebook ' + (new Date().toUTCString()) + '.acnb')">
+            <span class="glyphicon glyphicon-cloud-download"></span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+
+    <div id="open-modal" class="modal fade" role="dialog">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header">
+            <button type="button" class="close" data-dismiss="modal">&times;</button>
+            <h4 class="modal-title">Choose *.acnb file to open</h4>
+          </div>
+          <div class="modal-body">
+            <input type='file' class='input' onchange='onChooseFile(event)' accept=".acnb"/>
+          </div>
+          <div class="modal-footer">
+            <button id="load" type="button" class="btn btn-warning" disabled onclick="$('#open-modal').modal('hide');load();">Load</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <div id="cell-list"></div>
+
+
+
+    <script>
+
+      const DEFAULT = [
+        "let g = new Group([15], verbose);\ng.mu(true, false, new Set([1, 2]), true);",
+        "// I want to create the set {1, 2, 3} and\n// find its 2 fold restricted sumset in Z_13\nlet fs = new FastSet();\nfs.add_all([1, 2, 3]);\nlet sumset1 = fs.hfold_restricted_sumset(2, 13);\nprint(sumset1.to_string())"
+      ]
+
+      var contents = {};
+      var codeMirrors = [null];
+
+      var selected_cell;
+
+      var execution_num = 0;
+
+      var verbose;
+
+      const cell_list = document.getElementById('cell-list');
+
+      function get_next_id_number() {
+        return Math.max(0, ...Object.keys(contents)) + 1;
+      }
+
+      function deselect() {
+        var selected_elements = document.getElementsByClassName("selected");
+        while (selected_elements.length > 0) {
+          selected_elements = document.getElementsByClassName("selected");
+          selected_elements[0].classList.remove("selected");
+        }
+        selected_cell = null;
+      }
+
+      function select_cell(num) {
+        deselect();
+        document.getElementById('cell-' + num).classList.add('selected');
+        selected_cell = num;
+      }
+
+      function generate_cell(cell_id, cell_info) {
+        const id = cell_id;
+
+        let cell = document.createElement('div'); cell.classList.add('cell', 'container'); cell.setAttribute('id', 'cell-' + id);
+        let row1 = document.createElement('div'); row1.classList.add('row');
+        let code_tag = document.createElement('div'); code_tag.classList.add('col-xs-1', 'side-tag', 'code-tag'); code_tag.setAttribute('id', 'code-tag-' + id);
+        let code_div = document.createElement('div'); code_div.classList.add('col-xs-11', 'code-div'); code_div.setAttribute('id', 'code-div-' + id);
+        let row2 = document.createElement('div'); row2.classList.add('row');
+        let output_tag = document.createElement('div'); output_tag.classList.add('col-xs-1', 'side-tag', 'output-tag', 'hidden'); output_tag.setAttribute('id', 'output-tag-' + id);
+        let output_div = document.createElement('div'); output_div.classList.add('col-xs-11', 'output-div'); output_div.setAttribute('id', 'output-div-' + id);
+        let verbose = document.createElement('div'); verbose.classList.add('verbose'); verbose.setAttribute('id', 'verbose-' + id);
+
+        cell.appendChild(row1);
+          row1.appendChild(code_tag);
+            code_tag.innerHTML = "[ ]:";
+          row1.appendChild(code_div);
+        cell.appendChild(row2);
+          row2.appendChild(output_tag);
+            output_tag.innerHTML = "[ ]:";
+          row2.appendChild(output_div);
+            output_div.appendChild(verbose);
+
+        return cell;
+      }
+
+      function initialize_codeMirror(cell_id) {
+        const id = cell_id;
+
+        let cell = document.getElementById('cell-' + id);
+        let code_div = document.getElementById('code-div-' + id);
+
+        codeMirrors[id] = CodeMirror(code_div, {
+          value: "",
+          mode: "javascript",
+          lineNumbers: true,
+          tabSize: 2,
+          autofocus: false
+        });
+
+        cell.onclick = function() {
+          select_cell(id);
+        };
+        codeMirrors[id].on('change', function() {
+          contents[id].code_content = codeMirrors[id].getValue();
+        });
+        codeMirrors[id].on('focus', function() {
+          code_div.classList.add('focused');
+        });
+        codeMirrors[id].on('blur', function() {
+          code_div.classList.remove('focused');
+        });
+        code_div.addEventListener('keydown', function(e) {
+          if (event.code == "Enter" && event.shiftKey) {
+            run(id);
+            e.preventDefault();
+            return false;
+          }
+        });
+      }
+
+      function new_cell(s) {
+        const id = get_next_id_number();
+        let cell_info = {
+          code_content: s ? s : "",
+          tag: "",
+          output_content: "",
+          output_type: ""
+        };
+        contents[id] = cell_info;
+        // create HTML DOM and add to document
+        add_cell(id);
+      }
+
+      function add_cell(id, loc) {
+        // from content, add cell to page and start functionality
+        let cell = generate_cell(id, contents[id]);
+        if (loc) {
+          cell_list.insertBefore(cell, document.getElementById('cell-' + loc));
+        } else {
+          cell_list.appendChild(cell);
+        }
+        initialize_codeMirror(id); // for some reason, this needs to be done AFTER the DOM placement  :( ...
+        write_code(id);
+        write_output(id);
+      }
+
+      function write_code(id) {
+        codeMirrors[id].setValue(contents[id].code_content);
+      }
+
+      function write_output(id) {
+        document.getElementById('verbose-' + id).style.color = contents[id].output_type == 'error' ? 'red' : 'black';
+        document.getElementById('verbose-' + id).innerHTML = contents[id].output_content.replaceAll('\n','<br>').replaceAll(' ','&nbsp;');
+        document.getElementById('code-tag-' + id).innerHTML = '[' + contents[id].tag + ']:';
+        document.getElementById('output-tag-' + id).innerHTML = '[' + contents[id].tag + ']:';
+        if (contents[id].tag != "") document.getElementById('output-tag-' + id).classList.remove('hidden');
+      }
+
+      function print(s) {
+        verbose.innerHTML += s + "\n";
+      }
+
+      function run(cell_id) {
+        const id = cell_id;
+        if (contents[id]) {
+          verbose = {innerHTML: ""};
+          execution_num++;
+          contents[id].tag = execution_num;
+          try {
+            eval(codeMirrors[id].getValue());
+            contents[id].output_type = 'normal';
+            contents[id].output_content = verbose.innerHTML;
+          } catch (e) {
+            contents[id].output_type = 'error';
+            contents[id].output_content = e.stack;
+            console.log(e.stack);
+          }
+          write_output(id);
+          if (get_next_id_number() == Number(id) + 1) { // if last cell
+            new_cell();
+            document.getElementById('cell-' + (Number(id) + 1)).click();
+          }
+        }
+      }
+
+      var file;
+      function onChooseFile(event) {
+        if (typeof window.FileReader !== 'function')
+          throw ("The file API isn't supported on this browser.");
+        let input = event.target;
+        if (!input)
+          throw ("The browser does not properly implement the event object");
+        if (!input.files)
+          throw ("This browser does not support the `files` property of the file input.");
+        if (!input.files[0])
+          return undefined;
+        file = input.files[0];
+        document.getElementById('load').disabled = false;
+      }
+
+      function load() {
+        var fr = new FileReader();
+        fr.onload = function(e) {
+          deselect();
+          while (cell_list.hasChildNodes()) {
+            cell_list.removeChild(cell_list.lastChild);
+          }
+          contents = JSON.parse(e.target.result);
+          selected_cell = null;
+          codeMirrors = [null];
+          execution_num = 0;
+          let ids = Object.keys(contents);
+          ids.sort();
+          for (let id of ids) {
+            execution_num++;
+            add_cell(id);
+          }
+        }
+        fr.readAsText(file);
+
+      }
+
+      for (let i = 0; i < DEFAULT.length; i++) {
+        new_cell(DEFAULT[i]);
+      }
+      for (let i = 0; i < DEFAULT.length; i++) {
+        run((i + 1) + "");
+      }
+
+
+    </script>
+
+  </body>
+</html>
