@@ -1380,7 +1380,7 @@ class Group {
 
 class Computer {
   constructor(data) {
-    this.worker = new Worker('addComb.js');
+    this.worker = new Worker('AddComb.js');
   }
 
   start(data) {
