@@ -237,8 +237,8 @@ function f(d, m, h) {
 }
 
 function delta(d, n, m, h) {
-  let r = h % d;
-  let k = m % d;
+  let r = h % d || d;
+  let k = m % d || d;
   if (r < k) {
     return (k - r) * r - (d - 1);
   } else if (k < r && r < d) {
@@ -251,8 +251,8 @@ function delta(d, n, m, h) {
 }
 
 function f_restricted(d, n, m, h) {
-  let r = h % d;
-  let k = m % d;
+  let r = h % d || d;
+  let k = m % d || d;
   if (h <= Math.min(k, d - 1)) {
     return Math.min(n, f(d,m,h), h * m - h**2 + 1);
   } else {
