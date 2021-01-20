@@ -159,6 +159,9 @@
           <button class="btn btn-default" onclick="new_cell()">
             <span class="glyphicon glyphicon-plus"></span>
           </button>
+          <button class="btn btn-default" onclick="delete_cell()">
+            <span class="glyphicon glyphicon-minus"></span>
+          </button>
         </div>
         <div class="col-xs-6 text-right">
           <button class="btn btn-warning" data-toggle="modal" data-target="#open-modal">
@@ -315,6 +318,14 @@
         initialize_codeMirror(id); // for some reason, this needs to be done AFTER the DOM placement  :( ...
         write_code(id);
         write_output(id);
+      }
+
+      function delete_cell() {
+        if (selected_cell) {
+          delete(contents[selected_cell]);
+          delete(codeMirrors[selected_cell]);
+          document.getElementById('cell-' + selected_cell).remove();
+        }
       }
 
       function write_code(id) {
