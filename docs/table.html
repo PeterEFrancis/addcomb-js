@@ -418,7 +418,7 @@
         for (let row = 0; row < num_rows; row++) {
           for (let col = 0; col < num_cols; col++) {
             const cell = tbody.children[row + 1].children[col + 1];
-            if (cell.getAttribute('state') == 'open' || cell.getAttribute('state') == 'error') {
+            if (cell.getAttribute('state') != 'closed') {
               cell.setAttribute('state', 'computing');
               let r = Number(cell.getAttribute('id').split('-')[1]);
               let c = Number(cell.getAttribute('id').split('-')[2]);
