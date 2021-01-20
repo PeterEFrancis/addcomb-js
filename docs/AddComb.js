@@ -913,13 +913,11 @@ function parse_args(func, arg) {
 
   arg = arg.replace(/\s/g, '');
   if (func === "nu" || func === "rho") {
-    if (arg.match(TWO_ARG_INTV_REG)) {
-    } else {
-      throw new Error("Two arguments expected. <br/> Ex: 3,[0,5]");
+    if (!arg.match(TWO_ARG_INTV_REG) && !arg.match(TWO_ARG_REG)) {
+      throw new Error("Two arguments expected. <br/> Ex: 3,[0,5] or 3,5");
     }
   } else if (func === 'mu') {
-    if (arg.match(TWO_ARG_REG)) {
-    } else {
+    if (!arg.match(TWO_ARG_REG)) {
       throw new Error("Two arguments expected. <br/> Ex: 3,2");
     }
   } else { // All the other funcs are 1 argument
