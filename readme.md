@@ -11,7 +11,7 @@
 To use `AddComb.js`, include the script in your html file.
 
 ```javascript
-<script src="https://PetereFrancis.com/addaomb-js/AddComb.min.js"></script>
+<script src="https://PetereFrancis.com/addcomb-js/AddComb.min.js"></script>
 ```
 
 
