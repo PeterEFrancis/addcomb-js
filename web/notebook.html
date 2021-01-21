@@ -39,6 +39,12 @@
     <!-- FileSaver -->
     <script src="ext/FileSaver.js"></script>
 
+    <!-- double click -->
+    <script src="ext/jquery.double-keypress.js"></script>
+
+
+
+
     <style>
 
       body {
@@ -176,18 +182,29 @@
       </div>
 
       <div class="row" style="margin-bottom: 40px; margin-top: 40px; background-color:lightgrey; padding: 10px;">
-        <div class="col-xs-6">
-          <button class="btn btn-success" onclick="run(selected_cell)">
-            <span class="glyphicon glyphicon-play"></span>
-          </button>
-          <button class="btn btn-default" onclick="insert_blank_cell(selected_cell + 1)">
-            <span class="glyphicon glyphicon-plus"></span>
-          </button>
-          <button class="btn btn-default" onclick="delete_cell()">
+        <div class="col-xs-4">
+          <div class="btn-group">
+            <button class="btn btn-default" onclick="insert_blank_cell(selected_cell); selected_cell++;" data-container="body" data-toggle="tooltip" data-placement="top" title="A,A">
+              <span class="glyphicon glyphicon-chevron-up"></span>
+            </button>
+            <button class="btn btn-default" disabled>
+              <span class="glyphicon glyphicon-plus"></span>
+            </button>
+            <button class="btn btn-default" onclick="insert_blank_cell(selected_cell + 1)" data-container="body" data-toggle="tooltip" data-placement="top" title="B,B">
+              <span class="glyphicon glyphicon-chevron-down"></span>
+            </button>
+          </div>
+          &emsp;
+          <button id="delete" class="btn btn-default" onclick="delete_selected();" data-toggle="tooltip" data-placement="top" title="D,D">
             <span class="glyphicon glyphicon-minus"></span>
           </button>
         </div>
-        <div class="col-xs-6 text-right">
+        <div class="col-xs-4 text-center">
+          <button class="btn btn-success" onclick="run(selected_cell)">
+            <span class="glyphicon glyphicon-play"></span>
+          </button>
+        </div>
+        <div class="col-xs-4 text-right">
           <button class="btn btn-warning" data-toggle="modal" data-target="#open-modal">
             <span class="glyphicon glyphicon-folder-open"></span>
           </button>
@@ -358,34 +375,32 @@
         };
       }
 
-      function set_onevents() {
+      function  set_handlers() {
         for (let cell_id = 1; cell_id <= get_num_cells(); cell_id++) {
           const id = cell_id;
-
           let cell = DOM_elements[id].cell;
-          let cm = codeMirrors[id];
           let code_div = DOM_elements[id].code_div;
-
+          let cm = codeMirrors[id];
           cell.onclick = function() {
             select_cell(id);
           };
-          cm.on('change', function() {
-            contents[id].code_content = codeMirrors[id].getValue();
-          });
-          cm.on('focus', function() {
-            code_div.classList.add('focused');
-          });
-          cm.on('blur', function() {
-            code_div.classList.remove('focused');
-          });
-          code_div.onkeydown = function(e) {
-            if (event.code == "Enter" && event.shiftKey) {
-              e.preventDefault();
-              run(id);
-              return false;
-            }
-          }
-
+          cm._handlers = {
+            change: [
+              function() {
+                contents[id].code_content = codeMirrors[id].getValue();
+              }
+            ],
+            focus: [
+              function() {
+                code_div.classList.add('focused');
+              }
+            ],
+            blur: [
+              function() {
+                code_div.classList.remove('focused');
+              }
+            ]
+          };
         }
       }
 
@@ -407,7 +422,7 @@
       }
 
       function put_cell_on_page_at(cell, cell_id) {
-        if (cell_id && cell_id != get_num_cells()) {
+        if (cell_id && cell_id != get_num_cells() && get_num_cells() > 0) {
           cell_list.insertBefore(cell, DOM_elements[cell_id + 1].cell);
         } else {
           cell_list.appendChild(cell);
@@ -437,24 +452,35 @@
         contents = insert(contents, cell_id, content);
         let cell_DOM = generate_cell_DOM(cell_id, content);
         DOM_elements = insert(DOM_elements, cell_id, cell_DOM);
+        console.log(DOM_elements);
         put_cell_on_page_at(DOM_elements[cell_id].cell, cell_id);
         let cm = generate_codeMirror(cell_id);
         codeMirrors = insert(codeMirrors, cell_id, cm);
         renumber_id_notes();
-        set_onevents();
+        set_handlers();
         // load cell content
         write_cell_code(cell_id);
         write_cell_output(cell_id);
       }
 
-      function delete_cell() {
+      function delete_cell(cell_id) {
+        contents = remove(contents, cell_id);
+        DOM_elements[selected_cell].cell.remove();
+        DOM_elements = remove(DOM_elements, cell_id);
+        codeMirrors = remove(codeMirrors, cell_id);
+        renumber_id_notes();
+        set_handlers();
+      }
+
+
+      function delete_selected() {
         if (selected_cell) {
-          contents = remove(contents, selected_cell);
-          DOM_elements[selected_cell].cell.remove();
-          DOM_elements = remove(DOM_elements, selected_cell);
-          codeMirrors = remove(codeMirrors, selected_cell);
-          renumber_id_notes();
-          set_onevents();
+          delete_cell(selected_cell);
+          if (get_num_cells() > 0) {
+            select_cell(selected_cell);
+          } else {
+            selected_cell = null;
+          }
         }
       }
 
@@ -526,7 +552,45 @@
 
 
 
+      document.onkeydown = function(e) {
+        if (event.code == "Enter" && event.shiftKey) {
+          if (selected_cell) {
+            e.preventDefault();
+            run(selected_cell);
+            return false;
+          }
+        }
+      }
+      $('body').dbKeypress(65, {
+        interval: 350,
+        callback: function(e) {
+          if (selected_cell && !codeMirrors[selected_cell].hasFocus()) {
+            insert_blank_cell(selected_cell);
+            selected_cell++;
+          }
+        }
+      });
+      $('body').dbKeypress(66, {
+        interval: 350,
+        callback: function(e) {
+          if (selected_cell && !codeMirrors[selected_cell].hasFocus()) {
+            insert_blank_cell(selected_cell + 1);
+          }
+        }
+      });
+      $('body').dbKeypress(68, {
+        interval: 350,
+        callback: function(e) {
+          if (selected_cell && !codeMirrors[selected_cell].hasFocus()) {
+            delete_selected();
+          }
+        }
+      });
 
+
+      $(document).ready(function(){
+        $('[data-toggle="tooltip"]').tooltip();
+      });
 
       build_page_from_contents();
 
