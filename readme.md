@@ -3,7 +3,7 @@
 `AddComb.js` is a javascript library for additive combinatorics calculation.
 
 
-##### The [Online Interface](https://PetereFrancis.com/addaomb-js/web/index.html) allows for full functionality of `AddComb.js`.
+##### The [Online Interface](https://PetereFrancis.com/addaomb-js/web/index.html) allows for full functionality of [this repository](https://github.com/PeterEFrancis/addcomb-js).
 
 
 ## Use
