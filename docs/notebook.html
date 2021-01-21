@@ -228,9 +228,7 @@
         return [...arr.slice(0,index), el, ...arr.slice(index)];
       }
       function remove(arr, index) {
-        let = -1;
-        arr.filter(x => {i++; return i != index});
-        return arr;
+        return [...arr.slice(0, index), ...arr.slice(1 + index)];
       }
 
       var contents = [null,
@@ -452,7 +450,7 @@
       function delete_cell() {
         if (selected_cell) {
           contents = remove(contents, selected_cell);
-          DOM_elements[selected_cell].remove();
+          DOM_elements[selected_cell].cell.remove();
           DOM_elements = remove(DOM_elements, selected_cell);
           codeMirrors = remove(codeMirrors, selected_cell);
           renumber_id_notes();
@@ -523,6 +521,8 @@
         }
         fr.readAsText(file);
       }
+
+
 
 
 
