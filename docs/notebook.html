@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     <title>
-      AddComb.js | Table Generator
+      AddComb.js | Notebook
     </title>
 
     <!-- addComb -->
@@ -37,7 +37,7 @@
     <script src="ext/codemirror/mode/javascript/javascript.js"></script>
 
     <!-- FileSaver -->
-    <script src="FileSaver.js"></script>
+    <script src="ext/FileSaver.js"></script>
 
     <style>
 
@@ -60,6 +60,20 @@
         border: 1px solid #02b1fc;
       }
 
+      .id-note {
+        position: absolute;
+        right: 4px;
+        top: 1px;
+        border-bottom: 1px solid lightgrey;
+        border-left: 1px solid lightgrey;
+        background: white;
+        font-size: 6pt;
+        padding: 0px 1px;
+        margin-right: 5px;
+        z-index: 99;
+        color: grey;
+      }
+
       .side-tag {
         color: lightgrey;
         user-select: none;
@@ -74,9 +88,10 @@
 
       .output-div, .code-div {
         padding-left: 0px;
-        padding-right: 5px;
+        padding-right: 8px;
         width: calc(100% - 65px) !important;
         white-space: nowrap;
+        overflow: scroll;
       }
 
       .hidden {
@@ -86,6 +101,16 @@
       .cell {
         padding-left: 15px;
         margin-bottom: 20px;
+        background-color: #fcfcfc;
+
+        padding-top: 10px;
+        padding-bottom: 5px;
+        /* border: 1px solid grey; */
+        border-radius: 5px;
+      }
+
+      .cell:hover {
+        background-color: #f7f7f7;
       }
 
       .cell.selected {
@@ -155,7 +180,7 @@
           <button class="btn btn-success" onclick="run(selected_cell)">
             <span class="glyphicon glyphicon-play"></span>
           </button>
-          <button class="btn btn-default" onclick="new_cell()">
+          <button class="btn btn-default" onclick="insert_blank_cell(selected_cell + 1)">
             <span class="glyphicon glyphicon-plus"></span>
           </button>
           <button class="btn btn-default" onclick="delete_cell()">
@@ -198,12 +223,30 @@
 
     <script>
 
-      const DEFAULT = [
-        "let g = new Group([15], verbose);\ng.mu(true, false, new Set([1, 2]), true);",
-        "// I want to create the set {1, 2, 3} and\n// find its 2 fold restricted sumset in Z_13\nlet fs = new FastSet();\nfs.add_all([1, 2, 3]);\nlet sumset1 = fs.hfold_restricted_sumset(2, 13);\nprint(sumset1.to_string())"
-      ]
 
-      var contents = {};
+      function insert(arr, index, el) {
+        return [...arr.slice(0,index), el, ...arr.slice(index)];
+      }
+      function remove(arr, index) {
+        let = -1;
+        arr.filter(x => {i++; return i != index});
+        return arr;
+      }
+
+      var contents = [null,
+        {
+          code_content: "let g = new Group([15], verbose);\ng.mu(true, false, new Set([1, 2]), true);",
+          tag: " ",
+          output_content: "",
+          output_type: ""
+        },
+        {
+          code_content: "// I want to create the set {1, 2, 3} and\n// find its 2 fold restricted sumset in Z_13\nlet fs = new FastSet();\nfs.add_all([1, 2, 3]);\nlet sumset1 = fs.hfold_restricted_sumset(2, 13);\nprint(sumset1.to_string())",
+          tag: " ",
+          output_content: "",
+          output_type: ""
+        }];
+      var DOM_elements = [null];
       var codeMirrors = [null];
 
       var selected_cell;
@@ -214,9 +257,25 @@
 
       const cell_list = document.getElementById('cell-list');
 
-      function get_next_id_number() {
-        return Math.max(0, ...Object.keys(contents)) + 1;
+
+      function get_num_cells() {
+        return contents.length - 1;
       }
+      function get_next_id_number(id) {
+        if (id) {
+          return id + 1;
+        }
+        return get_num_cells() + 1;
+        //   let greater_keys = Object.keys(contents).filter(x => x > id);
+        //   if (greater_keys.length == 0) {
+        //     return id + 1;
+        //   }
+        //   return Math.min(...greater_keys);
+        // }
+        // return Math.max(0, ...Object.keys(contents)) + 1;
+      }
+
+
 
       function deselect() {
         var selected_elements = document.getElementsByClassName("selected");
@@ -226,125 +285,19 @@
         }
         selected_cell = null;
       }
-
-      function select_cell(num) {
+      function select_cell(cell_id) {
         deselect();
-        document.getElementById('cell-' + num).classList.add('selected');
-        selected_cell = num;
+        DOM_elements[cell_id].cell.classList.add('selected');
+        selected_cell = cell_id;
       }
 
-      function generate_cell(cell_id, cell_info) {
-        const id = cell_id;
 
-        let cell = document.createElement('div'); cell.classList.add('cell', 'container'); cell.setAttribute('id', 'cell-' + id);
-        let row1 = document.createElement('div'); row1.classList.add('row');
-        let code_tag = document.createElement('div'); code_tag.classList.add('col-xs-1', 'side-tag', 'code-tag'); code_tag.setAttribute('id', 'code-tag-' + id);
-        let code_div = document.createElement('div'); code_div.classList.add('col-xs-11', 'code-div'); code_div.setAttribute('id', 'code-div-' + id);
-        let row2 = document.createElement('div'); row2.classList.add('row');
-        let output_tag = document.createElement('div'); output_tag.classList.add('col-xs-1', 'side-tag', 'output-tag', 'hidden'); output_tag.setAttribute('id', 'output-tag-' + id);
-        let output_div = document.createElement('div'); output_div.classList.add('col-xs-11', 'output-div'); output_div.setAttribute('id', 'output-div-' + id);
-        let verbose = document.createElement('div'); verbose.classList.add('verbose'); verbose.setAttribute('id', 'verbose-' + id);
-
-        cell.appendChild(row1);
-          row1.appendChild(code_tag);
-            code_tag.innerHTML = "[ ]:";
-          row1.appendChild(code_div);
-        cell.appendChild(row2);
-          row2.appendChild(output_tag);
-            output_tag.innerHTML = "[ ]:";
-          row2.appendChild(output_div);
-            output_div.appendChild(verbose);
-
-        return cell;
-      }
-
-      function initialize_codeMirror(cell_id) {
-        const id = cell_id;
-
-        let cell = document.getElementById('cell-' + id);
-        let code_div = document.getElementById('code-div-' + id);
-
-        codeMirrors[id] = CodeMirror(code_div, {
-          value: "",
-          mode: "javascript",
-          lineNumbers: true,
-          tabSize: 2,
-          autofocus: false
-        });
-
-        cell.onclick = function() {
-          select_cell(id);
-        };
-        codeMirrors[id].on('change', function() {
-          contents[id].code_content = codeMirrors[id].getValue();
-        });
-        codeMirrors[id].on('focus', function() {
-          code_div.classList.add('focused');
-        });
-        codeMirrors[id].on('blur', function() {
-          code_div.classList.remove('focused');
-        });
-        code_div.addEventListener('keydown', function(e) {
-          if (event.code == "Enter" && event.shiftKey) {
-            run(id);
-            e.preventDefault();
-            return false;
-          }
-        });
-      }
-
-      function new_cell(s) {
-        const id = get_next_id_number();
-        let cell_info = {
-          code_content: s ? s : "",
-          tag: "",
-          output_content: "",
-          output_type: ""
-        };
-        contents[id] = cell_info;
-        // create HTML DOM and add to document
-        add_cell(id);
-      }
-
-      function add_cell(id, loc) {
-        // from content, add cell to page and start functionality
-        let cell = generate_cell(id, contents[id]);
-        if (loc) {
-          cell_list.insertBefore(cell, document.getElementById('cell-' + loc));
-        } else {
-          cell_list.appendChild(cell);
-        }
-        initialize_codeMirror(id); // for some reason, this needs to be done AFTER the DOM placement  :( ...
-        write_code(id);
-        write_output(id);
-      }
-
-      function delete_cell() {
-        if (selected_cell) {
-          delete(contents[selected_cell]);
-          delete(codeMirrors[selected_cell]);
-          document.getElementById('cell-' + selected_cell).remove();
-        }
-      }
-
-      function write_code(id) {
-        codeMirrors[id].setValue(contents[id].code_content);
-      }
-
-      function write_output(id) {
-        document.getElementById('verbose-' + id).style.color = contents[id].output_type == 'error' ? 'red' : 'black';
-        document.getElementById('verbose-' + id).innerHTML = contents[id].output_content.replaceAll('\n','<br>').replaceAll(' ','&nbsp;');
-        document.getElementById('code-tag-' + id).innerHTML = '[' + contents[id].tag + ']:';
-        document.getElementById('output-tag-' + id).innerHTML = '[' + contents[id].tag + ']:';
-        if (contents[id].tag != "") document.getElementById('output-tag-' + id).classList.remove('hidden');
-      }
 
       function print(s) {
         verbose.innerHTML += s + "\n";
       }
-
       function run(cell_id) {
-        const id = cell_id;
+        const id = Number(cell_id);
         if (contents[id]) {
           verbose = {innerHTML: ""};
           execution_num++;
@@ -358,13 +311,191 @@
             contents[id].output_content = e.stack;
             console.log(e.stack);
           }
-          write_output(id);
-          if (get_next_id_number() == Number(id) + 1) { // if last cell
-            new_cell();
-            document.getElementById('cell-' + (Number(id) + 1)).click();
+          write_cell_output(id);
+          if (id == contents.length - 1) { // if last cell
+            insert_blank_cell(id + 1);
           }
+          DOM_elements[id + 1].cell.click();
+          codeMirrors[id + 1].focus();
         }
       }
+
+
+
+
+
+      function generate_cell_DOM(cell_id) {
+        const id = cell_id;
+
+        let cell = document.createElement('div'); cell.classList.add('cell', 'container'); // cell.setAttribute('id', 'cell-' + id);
+        let row1 = document.createElement('div'); row1.classList.add('row');
+        let code_tag = document.createElement('div'); code_tag.classList.add('col-xs-1', 'side-tag', 'code-tag'); // code_tag.setAttribute('id', 'code-tag-' + id);
+        let code_div = document.createElement('div'); code_div.classList.add('col-xs-11', 'code-div'); // code_div.setAttribute('id', 'code-div-' + id);
+        let id_note = document.createElement('div'); id_note.classList.add('id-note'); // id_note.setAttribute('id', 'id-note-' + id);
+        let row2 = document.createElement('div'); row2.classList.add('row');
+        let output_tag = document.createElement('div'); output_tag.classList.add('col-xs-1', 'side-tag', 'output-tag', 'hidden'); // output_tag.setAttribute('id', 'output-tag-' + id);
+        let output_div = document.createElement('div'); output_div.classList.add('col-xs-11', 'output-div'); // output_div.setAttribute('id', 'output-div-' + id);
+        let verbose = document.createElement('div'); verbose.classList.add('verbose'); // verbose.setAttribute('id', 'verbose-' + id);
+
+        cell.appendChild(row1);
+          row1.appendChild(code_tag);
+            code_tag.innerHTML = "[ ]:";
+          row1.appendChild(code_div);
+            code_div.appendChild(id_note);
+              id_note.innerHTML = id;
+        cell.appendChild(row2);
+          row2.appendChild(output_tag);
+            output_tag.innerHTML = "[ ]:";
+          row2.appendChild(output_div);
+            output_div.appendChild(verbose);
+
+        return {
+          cell: cell,
+          code_tag: code_tag,
+          code_div: code_div,
+          id_note: id_note,
+          output_tag: output_tag,
+          output_div: output_div,
+          verbose: verbose
+        };
+      }
+
+      function set_onevents() {
+        for (let cell_id = 1; cell_id <= get_num_cells(); cell_id++) {
+          const id = cell_id;
+
+          let cell = DOM_elements[id].cell;
+          let cm = codeMirrors[id];
+          let code_div = DOM_elements[id].code_div;
+
+          cell.onclick = function() {
+            select_cell(id);
+          };
+          cm.on('change', function() {
+            contents[id].code_content = codeMirrors[id].getValue();
+          });
+          cm.on('focus', function() {
+            code_div.classList.add('focused');
+          });
+          cm.on('blur', function() {
+            code_div.classList.remove('focused');
+          });
+          code_div.onkeydown = function(e) {
+            if (event.code == "Enter" && event.shiftKey) {
+              e.preventDefault();
+              run(id);
+              return false;
+            }
+          }
+
+        }
+      }
+
+      function generate_codeMirror(cell_id) {
+        const id = cell_id;
+
+        let cell = DOM_elements[id].cell;
+        let code_div = DOM_elements[id].code_div;
+
+        let cm = CodeMirror(code_div, {
+          value: "",
+          mode: "javascript",
+          lineNumbers: true,
+          tabSize: 2,
+          autofocus: false
+        });
+
+        return cm;
+      }
+
+      function put_cell_on_page_at(cell, cell_id) {
+        if (cell_id && cell_id != get_num_cells()) {
+          cell_list.insertBefore(cell, DOM_elements[cell_id + 1].cell);
+        } else {
+          cell_list.appendChild(cell);
+        }
+      }
+
+      function renumber_id_notes() {
+        for (let cell_id = 1; cell_id < get_num_cells() + 1; cell_id++) {
+          DOM_elements[cell_id].id_note.innerHTML = cell_id;
+        }
+      }
+
+      function insert_blank_cell(cell_id) {
+        cell_id = cell_id || get_next_id_number();
+        let content = {
+          code_content: "",
+          tag: " ", // cell's execution number
+          output_content: "",
+          output_type: ""
+        };
+        insert_cell(cell_id, content);
+      }
+
+
+
+      function insert_cell(cell_id, content) {
+        contents = insert(contents, cell_id, content);
+        let cell_DOM = generate_cell_DOM(cell_id, content);
+        DOM_elements = insert(DOM_elements, cell_id, cell_DOM);
+        put_cell_on_page_at(DOM_elements[cell_id].cell, cell_id);
+        let cm = generate_codeMirror(cell_id);
+        codeMirrors = insert(codeMirrors, cell_id, cm);
+        renumber_id_notes();
+        set_onevents();
+        // load cell content
+        write_cell_code(cell_id);
+        write_cell_output(cell_id);
+      }
+
+      function delete_cell() {
+        if (selected_cell) {
+          contents = remove(contents, selected_cell);
+          DOM_elements[selected_cell].remove();
+          DOM_elements = remove(DOM_elements, selected_cell);
+          codeMirrors = remove(codeMirrors, selected_cell);
+          renumber_id_notes();
+          set_onevents();
+        }
+      }
+
+
+      function write_cell_code(cell_id) {
+        codeMirrors[cell_id].setValue(contents[cell_id].code_content);
+      }
+      function write_cell_output(cell_id) {
+        DOM_elements[cell_id].verbose.style.color = contents[cell_id].output_type == 'error' ? 'red' : 'black';
+        DOM_elements[cell_id].verbose.innerHTML = contents[cell_id].output_content.replaceAll('\n','<br>').replace('\t','&emsp;').replaceAll(' ','&nbsp;');
+        DOM_elements[cell_id].code_tag.innerHTML = '[' + contents[cell_id].tag + ']:';
+        DOM_elements[cell_id].output_tag.innerHTML = '[' + contents[cell_id].tag + ']:';
+        if (contents[cell_id].tag != " ") DOM_elements[cell_id].output_tag.classList.remove('hidden');
+      }
+
+
+
+      function build_page_from_contents() {
+        let old_contents = contents;
+        while (cell_list.hasChildNodes()) {
+          cell_list.removeChild(cell_list.lastChild);
+        }
+        selected_cell = null;
+        contents = [null];
+        DOM_elements = [null];
+        codeMirrors = [null];
+        execution_num = 0;
+        for (let cell_id = 1; cell_id < old_contents.length; cell_id++) {
+          execution_num = Math.max(execution_num, Number(old_contents[cell_id].tag));
+          insert_cell(cell_id, old_contents[cell_id]);
+        }
+      }
+
+
+
+
+
+
+
 
       var file;
       function onChooseFile(event) {
@@ -381,34 +512,26 @@
         document.getElementById('load').disabled = false;
       }
 
+
+
       function load() {
         var fr = new FileReader();
         fr.onload = function(e) {
           deselect();
-          while (cell_list.hasChildNodes()) {
-            cell_list.removeChild(cell_list.lastChild);
-          }
           contents = JSON.parse(e.target.result);
-          selected_cell = null;
-          codeMirrors = [null];
-          execution_num = 0;
-          let ids = Object.keys(contents);
-          ids.sort();
-          for (let id of ids) {
-            execution_num++;
-            add_cell(id);
-          }
+          build_page_from_contents();
         }
         fr.readAsText(file);
-
       }
 
-      for (let i = 0; i < DEFAULT.length; i++) {
-        new_cell(DEFAULT[i]);
-      }
-      for (let i = 0; i < DEFAULT.length; i++) {
-        run((i + 1) + "");
-      }
+
+
+
+
+      build_page_from_contents();
+
+      run(1);
+      run(2);
 
 
     </script>
