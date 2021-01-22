@@ -11,7 +11,7 @@
     </title>
 
     <!-- addComb -->
-    <script src="AddComb.js"></script>
+    <script src="../AddComb.js"></script>
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
@@ -407,7 +407,7 @@
           set_calc_button(false);
 
           try {
-            let computer = new Computer();
+            let computer = new Computer('../AddComb.js');
             computer.start({
               purpose: 'function',
               info: {

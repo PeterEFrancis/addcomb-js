@@ -1377,8 +1377,8 @@ class Group {
 // worker class and endpoints
 
 class Computer {
-  constructor(data) {
-    this.worker = new Worker('AddComb.js');
+  constructor(loc) {
+    this.worker = new Worker(loc || 'AddComb.js');
   }
 
   start(data) {

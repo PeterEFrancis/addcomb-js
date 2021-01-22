@@ -423,7 +423,7 @@
               let r = Number(cell.getAttribute('id').split('-')[1]);
               let c = Number(cell.getAttribute('id').split('-')[2]);
               let rs = document.getElementById("options").options[document.getElementById("options").selectedIndex].text;
-              let comp = new Computer();
+              let comp = new Computer('../AddComb.js');
               comp.start({
                 purpose: 'function',
                 info: {
