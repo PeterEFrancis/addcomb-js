@@ -222,9 +222,9 @@
             <div class="col-xs-12">
               Enter the function arguments, using <strong>r</strong> and <strong>c</strong> for the row and column variables.
               <ul>
-                <li>$G$: Group. Ex: 4 is $\mathbb{Z}_4$ and 2,3 or 2x3 is $\mathbb{Z}_2\times\mathbb{Z}_3$.</li>
+                <li>$G$: Group. Ex: 4 is $\mathbb{Z}_4$ and 2x4 is $\mathbb{Z}_2\times\mathbb{Z}_4$.</li>
                 <li>$m,l,k$: positive integer. Ex: 1,2,3.</li>
-                <li>$H$: set. Either an interval (e.g. [0,2]), or a single integer (3 is the set {3}).
+                <li>$H$: set. Either an interval (e.g. [0,2]), or a single integer (3 is the set {3}).</li>
               </ul>
             </div>
           </div>
@@ -260,10 +260,10 @@
         </div>
         <div class="col-md-3 text-center" style="padding: 10px;">
           <button id="compute" class="btn btn-success" style="margin: 10px;" onclick="compute()" disabled>Compute</button><br>
-          <label>
+          <!-- <label>
             <input id="verbose" type="checkbox"></input>
             Verbose
-          </label>
+          </label> -->
           <!-- <button id="stop" class="btn btn-danger" style="margin: 10px;">
             <span class="glyphicon glyphicon-stop"></span>
           </button>
@@ -318,11 +318,11 @@
         </div>
       </div>
 
-      <div class="row" style="margin-top: 40px;">
+      <!-- <div class="row" style="margin-top: 40px;">
         <div class="col-md-12">
           <textarea id="result" placeholder="verbose results" readonly></textarea>
         </div>
-      </div>
+      </div> -->
 
     </div>
 
@@ -432,15 +432,15 @@
                   restricted:rs.includes('r'),
                   signed:rs.includes('s'),
                   sizes:document.getElementById('G').value.replaceAll('r',r).replaceAll('c',c),
-                  verbose:document.getElementById('verbose').checked
+                  // verbose:document.getElementById('verbose').checked
                 },
                 oncomplete: function(response) {
                   cell.innerHTML = response.data.res;
                   cell.setAttribute('state', 'open');
                   document.getElementById('error').innerHTML = '&emsp;';
-                  if (document.getElementById('verbose').checked) {
-                    document.getElementById('result').innerHTML += response.data.verbose_string;
-                  }
+                  // if (document.getElementById('verbose').checked) {
+                  //   document.getElementById('result').innerHTML += response.data.verbose_string;
+                  // }
                 },
                 onerror: function(response) {
                   console.log(response.data.msg);

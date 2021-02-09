@@ -176,6 +176,20 @@
             {in: [3,3], out: []}
           ],
         },
+        'zeros': {
+          signature: 'zeros(<0>)',
+          cases: [
+            {in: [0], out: []},
+            {in: [5], out: [0,0,0,0,0]}
+          ],
+        },
+        'fill': {
+          signature: 'fill(<0>,<1>)',
+          cases: [
+            {in: [2,0], out: []},
+            {in: [2,5], out: [2,2,2,2,2]}
+          ],
+        },
         'sum': {
           signature: 'sum(<0>)',
           cases: [

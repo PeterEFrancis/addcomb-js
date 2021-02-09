@@ -249,7 +249,7 @@
 
       var contents = [null,
         {
-          code_content: "let g = new Group([15], verbose);\ng.mu(true, false, new Set([1, 2]), true);",
+          code_content: "let g = new Group([4], verbose);\ng.mu(true, false, new Set([1, 2]), true);",
           tag: " ",
           output_content: "",
           output_type: ""
@@ -259,7 +259,16 @@
           tag: " ",
           output_content: "",
           output_type: ""
-        }];
+        },
+        {
+          code_content: "let gs = new GeneralSet();\ngs.add_all([[1,1], [2,2], [3,3]]);\nprint(gs.to_string());\nprint(gs.hfold_sumset(2, [2,4]).to_string());",
+          tag: " ",
+          output_content: "",
+          output_type: ""
+        }
+      ];
+
+
       var DOM_elements = [null];
       var codeMirrors = [null];
 
@@ -367,7 +376,7 @@
         };
       }
 
-      function  set_handlers() {
+      function set_handlers() {
         for (let cell_id = 1; cell_id <= get_num_cells(); cell_id++) {
           const id = cell_id;
           let cell = DOM_elements[id].cell;
@@ -627,6 +636,7 @@
 
       run(1);
       run(2);
+      run(3);
 
 
     </script>

@@ -132,12 +132,12 @@
               <span id="signedrestricted-tex" hidden>$\hat{{\!}_\pm}$</span>
               <span style="margin: -3px">$($</span>
             </span>
-            <input id="G" class="form-control input-group-el" placeholder="G ex: 5, 2x3, or 3,6" type="string" oninput="check_group_string(this)"/>
+            <input id="G" class="form-control input-group-el" placeholder="G ex: 4 or 2x4" type="string" oninput="check_group_string(this)"/>
             <span class="input-group-addon input-group-el">$,$</span>
-            <input id="argument" class="form-control input-group-el" placeholder="Select Function" type="string"/>
+            <input id="argument" class="form-control input-group-el" placeholder="variables" type="string" disabled/>
             <span class="input-group-addon input-group-el">$)$</span>
           </div>
-          <br>
+          <p style="margin-top:5px;">$G$ is a Group. Ex: 4 is $\mathbb{Z}_4$ and 2x4 is $\mathbb{Z}_2\times\mathbb{Z}_4$.</p>
           <label>
             <input id="signed" type="checkbox" onclick="update_options();"></input>
             Signed (${\!}_{\pm}$)
@@ -422,6 +422,7 @@
                 set_calc_button(true);
                 document.getElementById('result').innerHTML += response.data.verbose_string;
                 document.getElementById('error').innerHTML = '&emsp;';
+                document.getElementById('result').scrollTop = 999999;
               },
               onerror: function (response) {
                 set_calc_button(true);
@@ -430,10 +431,10 @@
               },
               ontimeout: function(response) {
                 set_calc_button(true);
-                document.getElementById('result').innerHTML += ">>> " + response.data.msg + "\n";
                 console.log(response.msg);
+                document.getElementById('result').innerHTML += ">>> " + response.msg + "\nUse the Notebook for longer computations.";
               },
-              timeout: 60000
+              timeout: 6
             });
 
           } catch (e) {

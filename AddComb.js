@@ -98,11 +98,31 @@ function cycle_rev(num, i, m) {
 // other helpers
 
 function range(m,n) {
-  var r = [];
+  let r = [];
   for (let i = m; i < n; i++) {
     r.push(i);
   }
   return r;
+}
+
+function zeros(m) {
+  let z = [];
+  for (let i = 0; i < m; i++) {
+    z.push(0);
+  }
+  return z;
+}
+
+function fill(fill, l) {
+  let v = [];
+  for (let i = 0; i < l; i++) {
+    v.push(fill);
+  }
+  return v;
+}
+
+function clone(obj) {
+  return JSON.parse(JSON.stringify(obj));
 }
 
 function sum(arr) {
@@ -117,6 +137,95 @@ function in_interval(val, interval) {
 function arraysEqual(a1,a2) {
     /* WARNING: arrays must not contain {objects} or behavior may be undefined */
     return JSON.stringify(a1)==JSON.stringify(a2);
+}
+
+function fold(reducer, init, xs) {
+  let acc = init;
+  for (let x of xs) {
+    acc = reducer(acc, x);
+  }
+  return acc;
+}
+
+
+
+
+
+
+// iter tools
+
+function *iter_range(m,n) {
+  for (let i = m; i < n; i++) {
+    yield i;
+  }
+  return null;
+}
+
+function *combinations_with_replacement(n, r) {
+
+  let indices = zeros(r);
+
+  yield zeros(r);
+
+  while (true) {
+    let found = false;
+    for (var i = r - 1; i >= 0; i--) {
+      if (indices[i] != n - 1) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      return null;
+    }
+    indices = [...indices.slice(0,i), ...fill(indices[i] + 1, r - i)];
+    yield indices;
+  }
+
+}
+
+function *combinations(iter, r) {
+  let pool = [...iter];
+  let n = pool.length;
+  let indices = [...range(0,r)];
+  yield indices.map(x => pool[x]);
+  while (true) {
+    let found = false;
+    for (var i = r - 1; i >= 0; i--) {
+      if (indices[i] != i + n - r) {
+        found = true;
+        break;
+      }
+    }
+    if (!found) {
+      return null;
+    }
+    indices[i] += 1;
+    for (let j = i + 1; j < r; j++) {
+      indices[j] = indices[j-1] + 1;
+    }
+    yield indices.map(x => pool[x]);
+  }
+}
+
+function *each_element(curr, G, zero) {
+  if (zero) {
+    yield zeros(G.length);
+  }
+
+  while (true) {
+    let index = 0;
+    while (curr[index] == G[index] - 1) {
+      curr[index] = 0;
+      index++;
+      if (index == curr.length) {
+        return null;
+      }
+    }
+    curr[index] += 1;
+    yield clone(curr);
+  }
+
 }
 
 
@@ -209,10 +318,15 @@ function rel_prime(arr) {
   }
 }
 
-function add_in_G(a, b, G) {
-  return [...a.entries()].map(x => (x[1] + b[x[0]] + G[x[0]]) % G[x[0]]);
+function mod_add(a, b, G) {
+  return a.map((x, i) => (x + b[i] + G[i]) % G[i]);
 }
 
+
+
+function elem_sub(a, b) {
+  return a.map((x,i) => x - b[i]);
+}
 
 
 
@@ -690,9 +804,11 @@ class GeneralSet {
     this.contents = this.contents.filter(x => !arraysEqual(x,el));
   }
   add_all(iter) {
+
     for (let el of iter) {
       this.add(el);
     }
+    this.collect();
   }
   is_full(n) {
     return this.size() == n;
@@ -720,6 +836,19 @@ class GeneralSet {
   }
 
 
+  collect() {
+    // TODO: make this better
+    this.contents.sort();
+    let res = [];
+    for (el of this.contents) {
+      if (!arraysEqual(el, res[res.length - 1])) {
+        res.push(el);
+      }
+    }
+    this.contents = res;
+  }
+
+
   // displays
   as_vec() {
     return this.contents;
@@ -729,15 +858,144 @@ class GeneralSet {
   }
 
   // SUMSETS
-  // hfold_sumset(h, G) {
-  //   if (h == 0) {
-  //     return GeneralSet.singleton(0);
-  //   }
-  //   let hf = new GeneralSet();
-  //   for ()
-  // }
+  hfold_sumset(h, G) {
+    let res = new GeneralSet();
+    let n = G.length;
+    if (this.contents == 0 || h == 0) {
+      this.add(zeros(G.length));
+      return res;
+    }
+    for (let indices of combinations_with_replacement(this.contents.length, h)) {
+      res.add(indices.map(x => this.contents[x]).reduce((a,b) => mod_add(a, b, G)));
+    }
+    return res;
+  }
+  hfold_interval_sumset(intv, G) {
+    let res = new GeneralSet();
+    let [ia, ib] = intv;
+    for (let i = ia; i <= ib; i++) {
+      let tmp = hfold_sumset(this, i, G);
+      res.add_all(tmp);
+    }
+    return res;
+  }
+  hfold_signed_sumset(h, G) { // TODO: this is not working
+    unimplemented();
+    let res = new GeneralSet();
+    let n = G.length;
+    if (this.contents.length == 0 || h == 0) {
+      res.add(zeros(n));
+      return res;
+    }
+    for (let indices of combinations_with_replacement(this.contents.length, h)) {
+      let coeffs = fill(1, h);
+      while (true) {
+        res.add(
+          fold(
+            (prev, curr) => {
+              let [index, elem] = curr;
+              let [x, prev_elem] = prev;
+              if (coeffs[index] == 0) {
+                return [0, mod_add(prev_elem, elem_sub(G, elem), G)];
+              } else {
+                return [0, mod_add(prev_elem, elem, G)];
+              }
+            },
+            [0,zeros(n)],
+            indices.map((x, i) => [i, this.contents[x]])
+          )[0]
+        );
+        let found_index = 0;
+        let found = true;
+        while (coeffs[found_index] == 0) {
+          if (found_index == indices.length - 1) {
+            found = false;
+            break;
+          }
+          coeffs[found_index] = 1;
+          found_index = 1;
+        }
+        if (!found) {
+          break;
+        } else {
+          let val_at = indices[found_index];
+          let indx = found_index;
+          while (indx < indices.length && indices[indx] == val_at) {
+            coeffs[indx] = 0;
+            indx += 1;
+          }
+        }
+
+      }
+    }
+    return res;
+  }
+  hfold_interval_signed_sumset(intv, G) {
+    let res = new GeneralSet();
+    let [ia, ib] = intv;
+    for (let i = ia; i <= ib; i++) {
+      if (i == 0) {
+        res.add(zeros(this.contents.length));
+        continue;
+      }
+      let tmp = hfold_signed_sumset(this, i, G);
+      res = res.add_all(tmp);
+    }
+    return res;
+  }
+  hfold_restricted_sumset(h, G) {
+    let res = new GeneralSet();
+    let n = G.length;
+    if (this.contents.length == 0 || h == 0) {
+      res.add(zeros(n));
+      return res;
+    }
+    for (let indices of combinations(range(0, this.contents.length), h)) {
+      res.add(
+        fold(
+          (prev, curr) => mod_add(prev, curr, G),
+          zeros(n),
+          indices.map(x => this.contents[x])
+        )
+      );
+    }
+    return res;
+  }
+  hfold_interval_sumset(intv, G) {
+    let res = new GeneralSet();
+    let [ia, ib] = intv;
+    for (let i = ia; i <= ib; i++) {
+      let tmp = hfold_restricted_sumset(this, i, G);
+      res.add_all(tmp);
+    }
+    return res;
+  }
+  hfold_restricted_signed_sumset(h, G) {
+    unimplemented();
+  }
+  hfold_interval_sumset(intv, G) {
+    let res = new GeneralSet();
+    let [ia, ib] = intv;
+    for (let i = ia; i <= ib; i++) {
+      let tmp = hfold_restricted_signed_sumset(this, i, G);
+      res.add_all(tmp);
+    }
+    return res;
+  }
 
 }
+
+
+
+
+// let gs = new GeneralSet();
+// gs.add_all([[1,1], [2,2], [3,3]]);
+// let sumset1 = gs.hfold_restricted_sumset(2, [5,4]);
+// print(sumset1.to_string())
+
+
+
+
 
 
 
@@ -784,6 +1042,9 @@ class EachSetExact {
     return null;
   }
 }
+
+
+
 
 
 
@@ -976,6 +1237,7 @@ class Group {
     }
   }
 
+
   each_set_exact_helper(max_size, set_size, type) {
     if (this.n < set_size) {
       return new EachSetExact(0, 0, true).iterable(type);
@@ -986,13 +1248,21 @@ class Group {
   }
 
   each_set_exact(set_size) {
-    return this.each_set_exact_helper(this.n, set_size, 'next');
+    if (this.SetClass == FastSet) {
+      return this.each_set_exact_helper(this.n, set_size, 'next');
+    } else {
+      return combinations(each_element(zeros(this.sizes.length), this.sizes, true), set_size);
+    }
   }
   each_set_exact_zero(set_size) {
     return this.each_set_exact_helper(this.n - 1, set_size - 1, 'next_zero');
   }
   each_set_exact_no_zero(set_size) {
-    return this.each_set_exact_helper(this.n - 1, set_size, 'next_no_zero');
+    if (this.SetClass == FastSet) {
+      return this.each_set_exact_helper(this.n - 1, set_size, 'next_no_zero');
+    } else {
+      return combinations(each_element(zeros(this.sizes.length), this.sizes), set_size);
+    }
   }
 
   to_string() {
@@ -1359,7 +1629,10 @@ class Group {
         }
       }
       if (!found) {
-        if (verbose) this.verbose_writer.a_write((m - 1));
+        if (verbose) {
+          this.verbose_writer.r_write("For m=" + m + ", no sum-free sets were found");
+          this.verbose_writer.a_write((m - 1));
+        }
         return m - 1;
       }
     }
@@ -1386,8 +1659,9 @@ class Computer {
     const purpose = data.purpose;
     const timeout = data.timeout;
     // kill after timeout
+    const w = this.worker;
     const id = setTimeout(function() {
-      this.stop();
+      w.terminate();
       data.ontimeout({
         msg: purpose + ' calculation timed out after ' + timeout + 'ms.'
       });
@@ -1399,7 +1673,6 @@ class Computer {
       } else { // msg.data.type == 'error'
         data.onerror(msg);
       }
-
       clearTimeout(id);
     }
     // start computation
@@ -1437,7 +1710,7 @@ self.onmessage = function (msg) {
       if (group.SetClass == FastSet) {
         set_contents = set_contents.split(',').filter(x => x.length != 0).map(x => Number(x));
       } else {
-        set_contents = eval(set_contents.replaceAll('(','[').replaceAll(')',']'));
+        set_contents = eval('[' + set_contents.replaceAll('(','[').replaceAll(')',']') + ']');
       }
 
       let set = new group.SetClass();
