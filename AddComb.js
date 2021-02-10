@@ -840,7 +840,7 @@ class GeneralSet {
     // TODO: make this better
     this.contents.sort();
     let res = [];
-    for (el of this.contents) {
+    for (let el of this.contents) {
       if (!arraysEqual(el, res[res.length - 1])) {
         res.push(el);
       }
@@ -1707,9 +1707,16 @@ self.onmessage = function (msg) {
         sizes = sizes.replaceAll('x',',').split(",").map(x => Number(x))
       }
       let group = new Group(sizes);
+
       if (group.SetClass == FastSet) {
+        if (set_contents.includes('(')) { // TODO: make this check better
+          throw new Error("The group factor orders don't match the set contents.")
+        }
         set_contents = set_contents.split(',').filter(x => x.length != 0).map(x => Number(x));
       } else {
+        if (!set_contents.includes('(')) {
+          throw new Error("The group factor orders don't match the set contents.")
+        }
         set_contents = eval('[' + set_contents.replaceAll('(','[').replaceAll(')',']') + ']');
       }
 

@@ -255,6 +255,7 @@
               document.getElementById('error').innerHTML = '&emsp;';
             },
             onerror: function(response) {
+              set_calc_button(true);
               console.log(response.data.msg);
               document.getElementById('error').innerHTML = response.data.msg;
             },
