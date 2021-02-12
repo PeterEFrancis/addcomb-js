@@ -393,7 +393,9 @@ function gcd_arr(arr) {
 }
 
 function rel_prime(arr) {
-  if (arr.length == 2) {
+  if (arr.length == 1) {
+    return true;
+  } else if (arr.length == 2) {
     return gcd(...arr) == 1;
   } else {
     if (rel_prime(arr.slice(1))) {
@@ -410,11 +412,17 @@ function rel_prime(arr) {
 }
 
 function mod_add(a, b, G) {
+  if (G.length == 1) {
+    return (a + b + G[0]) % G[0];
+  }
   return a.map((x, i) => (x + b[i] + G[i]) % G[i]);
 }
 
-function elem_sub(a, b) {
-  return a.map((x,i) => x - b[i]);
+function neg_elem(a, G) {
+  if (G.length == 1) {
+    return G[0] - a;
+  }
+  return a.map((x,i) => x - G[i]);
 }
 
 
@@ -946,7 +954,7 @@ class GeneralSet {
     return this.contents;
   }
   to_string() {
-    return '{' + this.as_vec().map(x => "(" + x.toString() + ")").toString() + '}';
+    return '{' + this.as_vec().map(x => typeof(x) == 'object' ? "(" + x.toString() + ")" : x.toString()).toString() + '}';
   }
 
   // SUMSETS
@@ -985,7 +993,7 @@ class GeneralSet {
         let i = -1;
         to_add.push(
           fold(
-            (prev, curr) => {i++; return mod_add(prev, signs[i] == 1 ? curr : elem_sub(G, curr), G)},
+            (prev, curr) => {i++; return mod_add(prev, signs[i] == 1 ? curr : neg_elem(curr, G), G)},
             zeros(n),
             indices.map(x => this.contents[x])
           )
@@ -1050,7 +1058,7 @@ class GeneralSet {
         let i = -1;
         to_add.push(
           fold(
-            (prev, curr) => {i++; return mod_add(prev, signs[i] == 1 ? curr : elem_sub(G, curr), G)},
+            (prev, curr) => {i++; return mod_add(prev, signs[i] == 1 ? curr : neg_elem(curr, G), G)},
             zeros(n),
             indices.map(x => this.contents[x])
           )
@@ -1744,7 +1752,7 @@ self.onmessage = function (msg) {
         }
         set_contents = set_contents.split(',').filter(x => x.length != 0).map(x => Number(x));
       } else {
-        if (!set_contents.includes('(')) {
+        if (set_contents.includes('(') && group.sizes.length == 1) { // TODO: make this check better
           throw new Error("The group factor orders don't match the set contents.")
         }
         set_contents = eval('[' + set_contents.replaceAll('(','[').replaceAll(')',']') + ']');
