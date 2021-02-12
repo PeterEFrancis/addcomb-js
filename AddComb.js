@@ -1,11 +1,11 @@
 
-//             _      _   ____                   _         _
-//   __ _   __| |  __| | / ___| ___   _ __ ___  | |__     (_) ___
-//  / _` | / _` | / _` || |    / _ \ | '_ ` _ \ | '_ \    | |/ __|
-// | (_| || (_| || (_| || |___| (_) || | | | | || |_) |_  | |\__ \
-//  \__,_| \__,_| \__,_| \____|\___/ |_| |_| |_||_.__/(_)_/ ||___/
-//                                                      |__/
 
+//     _        _      _   ____                   _         _
+//    / \    __| |  __| | / ___| ___   _ __ ___  | |__     (_) ___
+//   / _ \  / _` | / _` || |    / _ \ | '_ ` _ \ | '_ \    | |/ __|
+//  / ___ \| (_| || (_| || |___| (_) || | | | | || |_) |_  | |\__ \
+// /_/   \_\\__,_| \__,_| \____|\___/ |_| |_| |_||_.__/(_)_/ ||___/
+//                                                       |__/
 
 
 
@@ -17,6 +17,17 @@
 
 const BIT_SIZE = 31;
 const B = 2 ** BIT_SIZE - 1;
+
+
+
+
+function unimplemented() {
+  throw new Error('This has not been implemented yet.')
+}
+
+function unreachable() {
+  throw new Error('This should not have been reachable.')
+}
 
 
 
@@ -228,6 +239,86 @@ function *each_element(curr, G, zero) {
 
 }
 
+function *sign_combinations(pattern) {
+  // pattern is a list of integers or other == comparable objects that are not "undefined"
+  let repeated = []; // list of how many times the elements are repeated (ex: pattern=[1, 2, 2, 4, 4, 5]  => repeated=[1, 2, 2, 1])
+  let num = 1;
+  for (let i = 1; i < pattern.length + 1; i++) {
+    if (pattern[i] != pattern[i - 1]) {
+      repeated.push(num);
+      num = 1;
+    } else {
+      num++;
+    }
+  }
+
+  let sign_comb = fill(1, repeated.length);
+  for (let i = 0; i < Math.pow(2, repeated.length); i++) {
+
+    // build repeated combination using sign_comb and repeated
+    let ret = [];
+    for (let i = 0; i < repeated.length; i++) {
+      ret.push(...fill(sign_comb[i], repeated[i]));
+    }
+    yield ret;
+
+    // move sign comb down one in grey code order
+    for (let j = 0; j < sign_comb.length; j++) {
+      if (sign_comb[j] == 1) {
+        sign_comb[j] = -1;
+        break;
+      } else {
+        sign_comb[j] = 1;
+      }
+    }
+  }
+
+  return null;
+}
+
+class EachSetExact {
+  constructor(state, setmask, doneflag) {
+    this.state = state;
+    this.setmask = setmask;
+    this.doneflag = doneflag;
+  }
+  next() {
+    // Find the greatest number which can be moved to the left
+    let can_be_moved_left = this.state & ~(this.state >> 1) & ~(this.setmask >> 1);
+    let first_moveable = BIT_SIZE - leading_zeros(can_be_moved_left);
+    if (first_moveable == 0) {
+        this.doneflag = true;
+        return new FastSet(this.state);
+    }
+    let update_region = ~((1 << (first_moveable - 1)) - 1) & ~this.setmask;
+    let to_fill_left = num_ones(this.state & update_region) - 1;
+
+    let old = this.state;
+    // Clear the updated region
+    this.state &= ~update_region;
+    let newregion = ((1 << (to_fill_left + 1)) - 1) << first_moveable;
+    this.state |= newregion;
+
+    return new FastSet(old);
+  }
+  next_zero() {
+    let ret = this.next();
+    ret.contents <<= 1;
+    ret.contents |= 1;
+    return ret;
+  }
+  next_no_zero() {
+    let ret = this.next();
+    ret.contents <<= 1;
+    return ret;
+  }
+  *iterable(type) {
+    while (!this.doneflag) {
+      yield this[type]();
+    }
+    return null;
+  }
+}
 
 
 
@@ -302,7 +393,9 @@ function gcd_arr(arr) {
 }
 
 function rel_prime(arr) {
-  if (arr.length == 2) {
+  if (arr.length == 1) {
+    return true;
+  } else if (arr.length == 2) {
     return gcd(...arr) == 1;
   } else {
     if (rel_prime(arr.slice(1))) {
@@ -319,14 +412,21 @@ function rel_prime(arr) {
 }
 
 function mod_add(a, b, G) {
+  if (G.length == 1) {
+    return (a + b + G[0]) % G[0];
+  }
   return a.map((x, i) => (x + b[i] + G[i]) % G[i]);
 }
 
-
-
-function elem_sub(a, b) {
-  return a.map((x,i) => x - b[i]);
+function neg_elem(a, G) {
+  if (G.length == 1) {
+    return G[0] - a;
+  }
+  return a.map((x,i) => x - G[i]);
 }
+
+
+
 
 
 
@@ -854,7 +954,7 @@ class GeneralSet {
     return this.contents;
   }
   to_string() {
-    return '{' + this.as_vec().map(x => "(" + x.toString() + ")").toString() + '}';
+    return '{' + this.as_vec().map(x => typeof(x) == 'object' ? "(" + x.toString() + ")" : x.toString()).toString() + '}';
   }
 
   // SUMSETS
@@ -879,55 +979,28 @@ class GeneralSet {
     }
     return res;
   }
-  hfold_signed_sumset(h, G) { // TODO: this is not working
-    unimplemented();
+
+  hfold_signed_sumset(h, G) {
     let res = new GeneralSet();
     let n = G.length;
     if (this.contents.length == 0 || h == 0) {
       res.add(zeros(n));
       return res;
     }
+    let to_add = [];
     for (let indices of combinations_with_replacement(this.contents.length, h)) {
-      let coeffs = fill(1, h);
-      while (true) {
-        res.add(
+      for (let signs of sign_combinations(indices)) {
+        let i = -1;
+        to_add.push(
           fold(
-            (prev, curr) => {
-              let [index, elem] = curr;
-              let [x, prev_elem] = prev;
-              if (coeffs[index] == 0) {
-                return [0, mod_add(prev_elem, elem_sub(G, elem), G)];
-              } else {
-                return [0, mod_add(prev_elem, elem, G)];
-              }
-            },
-            [0,zeros(n)],
-            indices.map((x, i) => [i, this.contents[x]])
-          )[0]
-        );
-        let found_index = 0;
-        let found = true;
-        while (coeffs[found_index] == 0) {
-          if (found_index == indices.length - 1) {
-            found = false;
-            break;
-          }
-          coeffs[found_index] = 1;
-          found_index = 1;
-        }
-        if (!found) {
-          break;
-        } else {
-          let val_at = indices[found_index];
-          let indx = found_index;
-          while (indx < indices.length && indices[indx] == val_at) {
-            coeffs[indx] = 0;
-            indx += 1;
-          }
-        }
-
+            (prev, curr) => {i++; return mod_add(prev, signs[i] == 1 ? curr : neg_elem(curr, G), G)},
+            zeros(n),
+            indices.map(x => this.contents[x])
+          )
+        )
       }
     }
+    res.add_all(to_add);
     return res;
   }
   hfold_interval_signed_sumset(intv, G) {
@@ -943,6 +1016,7 @@ class GeneralSet {
     }
     return res;
   }
+
   hfold_restricted_sumset(h, G) {
     let res = new GeneralSet();
     let n = G.length;
@@ -961,7 +1035,7 @@ class GeneralSet {
     }
     return res;
   }
-  hfold_interval_sumset(intv, G) {
+  hfold_interval_restricted_sumset(intv, G) {
     let res = new GeneralSet();
     let [ia, ib] = intv;
     for (let i = ia; i <= ib; i++) {
@@ -970,10 +1044,31 @@ class GeneralSet {
     }
     return res;
   }
+
   hfold_restricted_signed_sumset(h, G) {
-    unimplemented();
+    let res = new GeneralSet();
+    let n = G.length;
+    if (this.contents.length == 0 || h == 0) {
+      res.add(zeros(n));
+      return res;
+    }
+    let to_add = [];
+    for (let indices of combinations(range(0, this.contents.length), h)) {
+      for (let signs of sign_combinations(indices)) {
+        let i = -1;
+        to_add.push(
+          fold(
+            (prev, curr) => {i++; return mod_add(prev, signs[i] == 1 ? curr : neg_elem(curr, G), G)},
+            zeros(n),
+            indices.map(x => this.contents[x])
+          )
+        )
+      }
+    }
+    res.add_all(to_add);
+    return res;
   }
-  hfold_interval_sumset(intv, G) {
+  hfold_interval_restricted_signed_sumset(intv, G) {
     let res = new GeneralSet();
     let [ia, ib] = intv;
     for (let i = ia; i <= ib; i++) {
@@ -988,60 +1083,6 @@ class GeneralSet {
 
 
 
-// let gs = new GeneralSet();
-// gs.add_all([[1,1], [2,2], [3,3]]);
-// let sumset1 = gs.hfold_restricted_sumset(2, [5,4]);
-// print(sumset1.to_string())
-
-
-
-
-
-
-
-class EachSetExact {
-  constructor(state, setmask, doneflag) {
-    this.state = state;
-    this.setmask = setmask;
-    this.doneflag = doneflag;
-  }
-  next() {
-    // Find the greatest number which can be moved to the left
-    let can_be_moved_left = this.state & ~(this.state >> 1) & ~(this.setmask >> 1);
-    let first_moveable = BIT_SIZE - leading_zeros(can_be_moved_left);
-    if (first_moveable == 0) {
-        this.doneflag = true;
-        return new FastSet(this.state);
-    }
-    let update_region = ~((1 << (first_moveable - 1)) - 1) & ~this.setmask;
-    let to_fill_left = num_ones(this.state & update_region) - 1;
-
-    let old = this.state;
-    // Clear the updated region
-    this.state &= ~update_region;
-    let newregion = ((1 << (to_fill_left + 1)) - 1) << first_moveable;
-    this.state |= newregion;
-
-    return new FastSet(old);
-  }
-  next_zero() {
-    let ret = this.next();
-    ret.contents <<= 1;
-    ret.contents |= 1;
-    return ret;
-  }
-  next_no_zero() {
-    let ret = this.next();
-    ret.contents <<= 1;
-    return ret;
-  }
-  *iterable(type) {
-    while (!this.doneflag) {
-      yield this[type]();
-    }
-    return null;
-  }
-}
 
 
 
@@ -1051,13 +1092,9 @@ class EachSetExact {
 
 
 
-function unimplemented() {
-  throw new Error('This has not been implemented yet.')
-}
 
-function unreachable() {
-  throw new Error('This should not have been reachable.')
-}
+
+
 
 
 
@@ -1147,7 +1184,6 @@ function check_arg_var_string(el) {
   el.value = el.value.split('').filter(x => '1234567890,[]rc'.includes(x)).join('');
   // todo: make this better
 }
-
 
 function check_set_string(el) {
   el.value = el.value.split('').filter(x => '1234567890,()'.includes(x)).join('');
@@ -1647,6 +1683,8 @@ class Group {
 
 
 
+
+
 // worker class and endpoints
 
 class Computer {
@@ -1714,7 +1752,7 @@ self.onmessage = function (msg) {
         }
         set_contents = set_contents.split(',').filter(x => x.length != 0).map(x => Number(x));
       } else {
-        if (!set_contents.includes('(')) {
+        if (set_contents.includes('(') && group.sizes.length == 1) { // TODO: make this check better
           throw new Error("The group factor orders don't match the set contents.")
         }
         set_contents = eval('[' + set_contents.replaceAll('(','[').replaceAll(')',']') + ']');

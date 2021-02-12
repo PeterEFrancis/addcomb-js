@@ -186,7 +186,7 @@
 
       function update_group(el) {
 
-        el.value = el.value.split('').filter(x=>'1234567890,'.includes(x)).join('');
+        el.value = el.value.split('').filter(x=>'1234567890x'.includes(x)).join('');
         el.value = el.value.replaceAll(',,',',');
 
         if (el.value.split(",").filter(x => x != '').join(",") != last_group_string) {

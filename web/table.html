@@ -339,8 +339,8 @@
         let col_min = Number(document.getElementById('col-min').value);
         let col_max = Number(document.getElementById('col-max').value);
 
-        if (row_max <= row_min || col_max <= col_min) {
-          error.innerHTML = 'maximum bounds must be strictly greater than minimum bounds';
+        if (row_max < row_min || col_max < col_min) {
+          error.innerHTML = 'maximum bounds must be greater than or equal to minimum bounds';
           return;
         }
 
