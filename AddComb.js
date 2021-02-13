@@ -422,7 +422,7 @@ function neg_elem(a, G) {
   if (G.length == 1) {
     return G[0] - a;
   }
-  return a.map((x,i) => x - G[i]);
+  return a.map((x,i) => G[i] - x);
 }
 
 
@@ -904,9 +904,8 @@ class GeneralSet {
     this.contents = this.contents.filter(x => !arraysEqual(x,el));
   }
   add_all(iter) {
-
     for (let el of iter) {
-      this.add(el);
+      this.contents.push(el);
     }
     this.collect();
   }
@@ -1079,17 +1078,6 @@ class GeneralSet {
   }
 
 }
-
-
-
-
-
-
-
-
-
-
-
 
 
 
