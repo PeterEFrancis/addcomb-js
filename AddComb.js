@@ -195,11 +195,15 @@ function *combinations_with_replacement(n, r) {
 
 }
 
-function *combinations(iter, r) {
+function *combinations(iter, r, process_func) {
+  let process = process_func || function(x) {return x;};
   let pool = [...iter];
   let n = pool.length;
+  if (r > n) {
+    return null;
+  }
   let indices = [...range(0,r)];
-  yield indices.map(x => pool[x]);
+  yield process(indices.map(x => pool[x]));
   while (true) {
     let found = false;
     for (var i = r - 1; i >= 0; i--) {
@@ -215,7 +219,7 @@ function *combinations(iter, r) {
     for (let j = i + 1; j < r; j++) {
       indices[j] = indices[j-1] + 1;
     }
-    yield indices.map(x => pool[x]);
+    yield process(indices.map(x => pool[x]));
   }
 }
 
@@ -319,6 +323,10 @@ class EachSetExact {
     return null;
   }
 }
+
+
+
+
 
 
 
@@ -919,7 +927,7 @@ class GeneralSet {
     return this.size() == 0;
   }
   intersect(other) {
-    for (let el of this.values()) {
+    for (let el of this.contents) {
       if (!other.has(el)) {
         this.delete(el);
       }
@@ -973,7 +981,7 @@ class GeneralSet {
     let res = new GeneralSet();
     let [ia, ib] = intv;
     for (let i = ia; i <= ib; i++) {
-      let tmp = hfold_sumset(this, i, G);
+      let tmp = this.hfold_sumset(i, G);
       res.add_all(tmp);
     }
     return res;
@@ -1010,7 +1018,7 @@ class GeneralSet {
         res.add(zeros(this.contents.length));
         continue;
       }
-      let tmp = hfold_signed_sumset(this, i, G);
+      let tmp = this.hfold_signed_sumset(i, G);
       res = res.add_all(tmp);
     }
     return res;
@@ -1038,7 +1046,7 @@ class GeneralSet {
     let res = new GeneralSet();
     let [ia, ib] = intv;
     for (let i = ia; i <= ib; i++) {
-      let tmp = hfold_restricted_sumset(this, i, G);
+      let tmp = this.hfold_restricted_sumset(i, G);
       res.add_all(tmp);
     }
     return res;
@@ -1071,7 +1079,7 @@ class GeneralSet {
     let res = new GeneralSet();
     let [ia, ib] = intv;
     for (let i = ia; i <= ib; i++) {
-      let tmp = hfold_restricted_signed_sumset(this, i, G);
+      let tmp = this.hfold_restricted_signed_sumset(i, G);
       res.add_all(tmp);
     }
     return res;
@@ -1253,8 +1261,10 @@ class Group {
     this.groupType = this.sizes.length == 1 ? 'cyclic' : 'non-cyclic';
     if (sizes.length == 1 && sizes[0] <= BIT_SIZE) {
       this.SetClass = FastSet;
+      this.G = this.n;
     } else {
       this.SetClass = GeneralSet;
+      this.G = this.sizes;
       if (rel_prime(this.sizes) && this.n <= 31) {
         this.verbose_writer.r_write("The group G[" + this.sizes.toString() + "] is isomorphic to the group G[" + this.n + "]. Using this group instead will speed up calculation.")
       }
@@ -1275,7 +1285,7 @@ class Group {
     if (this.SetClass == FastSet) {
       return this.each_set_exact_helper(this.n, set_size, 'next');
     } else {
-      return combinations(each_element(zeros(this.sizes.length), this.sizes, true), set_size);
+      return combinations(each_element(zeros(this.sizes.length),this.sizes,true),set_size,function(x) {return new GeneralSet(x)});
     }
   }
   each_set_exact_zero(set_size) {
@@ -1285,7 +1295,7 @@ class Group {
     if (this.SetClass == FastSet) {
       return this.each_set_exact_helper(this.n - 1, set_size, 'next_no_zero');
     } else {
-      return combinations(each_element(zeros(this.sizes.length), this.sizes), set_size);
+      return combinations(each_element(zeros(this.sizes.length), this.sizes), set_size, function(x){return new GeneralSet(x)});
     }
   }
 
@@ -1297,14 +1307,6 @@ class Group {
     return (interval ? 'interval_' : '') + (restricted ? 'restricted_' : '') + (signed ? 'signed_' : '');
   }
 
-  get_G() {
-    // for use in sumset functions
-    // either the group order n (for FastSets) or sizes array (for GeneralSets)
-    if (this.SetClass == FastSet) {
-      return this.n;
-    }
-    return this.sizes;
-  }
 
   // chapter a
   nu(restricted, signed, m, H, verbose) {
@@ -1317,7 +1319,7 @@ class Group {
     let greatest_set = this.SetClass.empty_set();
     let curr_greatest = 0;
     for (let a of this.each_set_exact(m)) {
-      let size = a[sumset_function](H, this.n).size();
+      let size = a[sumset_function](H, this.G).size();
       if (size > curr_greatest) {
         if (size == this.n) {
           if (verbose) {
@@ -1332,7 +1334,7 @@ class Group {
     }
     if (verbose) {
       this.verbose_writer.r_write("Set with greatest sumset: A=" + greatest_set.to_string());
-      this.verbose_writer.r_write("(sumset is:) " + H_to_string(H) + "A=" + greatest_set[sumset_function](H.set, this.n).to_string());
+      this.verbose_writer.r_write("(sumset is:) " + H_to_string(H) + "A=" + greatest_set[sumset_function](H.set, this.G).to_string());
       this.verbose_writer.a_write(curr_greatest);
     }
     return curr_greatest;
@@ -1349,7 +1351,7 @@ class Group {
       if (signed) {
         for (let m = 1; m < this.n; m++) {
           for (let a of this.each_set_exact(m)) {
-            if (a[sumset_function](H, this.n).is_full(this.n)) {
+            if (a[sumset_function](H, this.G).is_full(this.n)) {
               if (verbose) {
                 this.verbose_writer.r_write("Found spanning set: " + a.to_string());
                 this.verbose_writer.a_write(m);
@@ -1381,7 +1383,7 @@ class Group {
 
         for (let m = lower_bound; m <= this.n; m++) {
           for (let a of this.each_set_exact(m)) {
-            if (a[sumset_function](H, this.n).is_full(this.n)) {
+            if (a[sumset_function](H, this.G).is_full(this.n)) {
               if (verbose) {
                 this.verbose_writer.r_write("Found spanning set: " + a.to_string());
                 this.verbose_writer.a_write(m);
@@ -1411,7 +1413,7 @@ class Group {
         }
         for (let m = 2; m <= this.n; m++) {
           for (let a of this.each_set_exact(m)) {
-            let sumset = a[sumset_function](H, this.n);
+            let sumset = a[sumset_function](H, this.G);
             if (sumset.is_full(this.n)) {
               if (verbose) {
                 this.verbose_writer.r_write("Found spanning set: " + a.to_string());
@@ -1430,7 +1432,8 @@ class Group {
           }
           for (let m = 2; m <= this.n; m++) {
             for (let a of this.each_set_exact(m)) {
-              if (a[sumset_function](H, this.n).is_full(this.n)) {
+
+              if (a[sumset_function](H, this.G).is_full(this.n)) {
                 if (verbose) {
                   this.verbose_writer.r_write("Found spanning set: " + a.to_string());
                   this.verbose_writer.a_write(m);
@@ -1503,7 +1506,7 @@ class Group {
       let expected = expected_function(m,h,s);
       let found = false;
       for (let a of this.each_set_exact(m)) {
-        if (a[sumset_function](H, this.n).size() == expected) {
+        if (a[sumset_function](H, this.G).size() == expected) {
           if (verbose) {
             this.verbose_writer.r_write("for m=" + m + ", found a=" + a.to_string());
             this.verbose_writer.a_write(m);
@@ -1530,7 +1533,7 @@ class Group {
     let smallest_set = this.SetClass.empty_set();
     let curr_smallest = this.n;
     for (let a of this.each_set_exact(m)) {
-      let size = a[sumset_function](H, this.n).size();
+      let size = a[sumset_function](H, this.G).size();
         if (size < curr_smallest) {
           curr_smallest = size;
           smallest_set = a;
@@ -1538,7 +1541,7 @@ class Group {
     }
     if (verbose) {
       this.verbose_writer.r_write("Set with smallest sumset: A=" +  smallest_set.to_string());
-      this.verbose_writer.r_write("(sumsets is:) " + H_to_string(H) + "A=" + smallest_set[sumset_function](H, this.n).to_string());
+      this.verbose_writer.r_write("(sumsets is:) " + H_to_string(H) + "A=" + smallest_set[sumset_function](H, this.G).to_string());
       this.verbose_writer.a_write(curr_smallest);
     }
     return curr_smallest;
@@ -1557,7 +1560,7 @@ class Group {
         if (!a[sumset_function](H,this.n).is_full(this.n)) {
           if (verbose) {
             this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which doesn't give a full sumset");
-            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + "A=" + a[sumset_function](H, this.n).to_string());
+            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + "A=" + a[sumset_function](H, this.G).to_string());
           }
           found = true;
           break;
@@ -1612,7 +1615,7 @@ class Group {
         if (a[sumset_function](H,this.n).is_full(this.n).zero_free(n)) {
           if (verbose) {
             this.verbose_writer.r_write("Found A=" + a.to_string() + "which gives a zero-free sumset");
-            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + "A=" + a[sumset_function](H, this.n).to_string());
+            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + "A=" + a[sumset_function](H, this.G).to_string());
             this.verbose_writer.a_write(m);
           }
           return m;
@@ -1640,13 +1643,13 @@ class Group {
     for (let m = 1; m < this.n; m++) {
       let found = false;
       for (let a of this.each_set_exact(m)) {
-        let k_a = a[sumset_function](k, this.n);
-        let l_a = a[sumset_function](l, this.n);
+        let k_a = a[sumset_function](k, this.G);
+        let l_a = a[sumset_function](l, this.G);
         k_a.intersect(l_a.clone());
         if (k_a.is_empty()) {
           if (verbose){
             this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which is sum-free");
-            this.verbose_writer.r_write("(kA = " + a[sumset_function](k, this.n).to_string() + ", lA = " + l_a.to_string() + ")");
+            this.verbose_writer.r_write("(kA = " + a[sumset_function](k, this.G).to_string() + ", lA = " + l_a.to_string() + ")");
           }
           found = true;
           break;
@@ -1785,7 +1788,8 @@ self.onmessage = function (msg) {
   } catch (e) {
     self.postMessage({
       type: 'error',
-      msg: e.message
+      msg: e.message,
+      error: e
     });
   }
 

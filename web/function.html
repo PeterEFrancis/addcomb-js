@@ -426,7 +426,7 @@
               },
               onerror: function (response) {
                 set_calc_button(true);
-                console.log(response);
+                console.log(response.data.error);
                 document.getElementById("error").innerHTML = response.data.msg;
               },
               ontimeout: function(response) {
@@ -434,7 +434,7 @@
                 console.log(response.msg);
                 document.getElementById('result').innerHTML += ">>> " + response.msg + "\nUse the Notebook for longer computations.";
               },
-              timeout: 6000
+              timeout: 60000
             });
 
           } catch (e) {

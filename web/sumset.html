@@ -257,6 +257,7 @@
             onerror: function(response) {
               set_calc_button(true);
               console.log(response.data.msg);
+              console.log(response.data.error);
               document.getElementById('error').innerHTML = response.data.msg;
             },
             ontimeout: function(response) {
