@@ -187,11 +187,11 @@
       function update_group(el) {
 
         el.value = el.value.split('').filter(x=>'1234567890x'.includes(x)).join('');
-        el.value = el.value.replaceAll(',,',',');
+        // el.value = el.value.replaceAll(',,',',');
 
-        if (el.value.split(",").filter(x => x != '').join(",") != last_group_string) {
-          last_group_string = el.value.split(",").filter(x => x != '').join(",");
-          let groups = el.value.split(',');
+        if (el.value.split("x").filter(x => x != '').join("x") != last_group_string) {
+          last_group_string = el.value.split("x").filter(x => x != '').join(",");
+          let groups = el.value.split('x');
           let group_out = document.getElementById('group-out');
           group_out.style.visibility = "hidden";
           try {
