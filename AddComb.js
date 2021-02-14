@@ -1633,8 +1633,8 @@ class Group {
 
     if (verbose) this.verbose_writer.c_write("mu" + VerboseWriter.disp_opt_string(restricted, signed) + "(" + this.to_string() + ", " + H_to_string(H) + ")");
 
-    let k = Math.min(...H);
-    let l = Math.max(...H);
+    let k = Math.max(...H);
+    let l = Math.min(...H);
 
     if (k == l) {
       if (verbose) this.verbose_writer.a_write(0);
