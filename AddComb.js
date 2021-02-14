@@ -1751,7 +1751,7 @@ self.onmessage = function (msg) {
 
       let set = new group.SetClass();
       set.add_all(set_contents);
-      let G = group.get_G();
+      let G = group.G;
       let interval = H_type(H) == 'interval';
       let sumset_function = 'hfold_' + group.get_opt_string(restricted, signed, interval) + 'sumset';
       let sumset = set[sumset_function](H,G);
