@@ -1040,10 +1040,6 @@ class GeneralSet {
   }
 
   hfold_restricted_sumset(h, G) {
-    // console.log("***** start ^ sumset calculation ******");
-    // console.log("contents:", this.contents);
-    // console.log("h:", h);
-    // console.log("G:", G);
     let res = new GeneralSet();
     let n = G.length;
     if (this.contents.length == 0 || h == 0) {
@@ -1051,21 +1047,14 @@ class GeneralSet {
       return res;
     }
     for (let indices of combinations(range(0, this.contents.length), h)) {
-      // console.log("    indices:",  indices);
-      let to_add = indices.map(x => this.contents[x]);
-      // console.log('    to_add:', to_add);
-      let added = fold(
-        (prev, curr) => mod_add(prev, curr, G),
-        n == 1 ? 0 : zeros(n),
-        to_add
-      );
-      // console.log("    added:", added);
       res.add(
-        added
+        fold(
+          (prev, curr) => mod_add(prev, curr, G),
+          n == 1 ? 0 : zeros(n),
+          indices.map(x => this.contents[x])
+        )
       );
-      // console.log("   res:", res.contents);
     }
-    // console.log("***** end ^ sumset calculation ******");
     return res;
   }
   hfold_interval_restricted_sumset(intv, G) {
@@ -1675,16 +1664,9 @@ class Group {
     for (let m = 1; m < this.n; m++) {
       let found = false;
       for (let a of this.each_set_exact(m)) {
-        // console.log("-----------------");
-        // console.log(a);
         let k_a = a[sumset_function](k, this.G);
-        // console.log(k_a.to_string());
         let l_a = a[sumset_function](l, this.G);
-        // console.log(l_a.to_string());
-        // stop();
         k_a.intersect(l_a.clone());
-        // console.log("intersect:");
-        // console.log(k_a);
         if (k_a.is_empty()) {
           if (verbose){
             this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which is sum-free");
@@ -1693,7 +1675,6 @@ class Group {
           found = true;
           break;
         }
-        // stop();
       }
       if (!found) {
         if (verbose) {
