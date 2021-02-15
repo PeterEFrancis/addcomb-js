@@ -29,6 +29,9 @@ function unreachable() {
   throw new Error('This should not have been reachable.')
 }
 
+function stop() {
+  throw new Error('This was intentional.')
+}
 
 
 
@@ -927,15 +930,27 @@ class GeneralSet {
     return this.size() == 0;
   }
   intersect(other) {
+    let to_delete = [];
     for (let el of this.contents) {
       if (!other.has(el)) {
-        this.delete(el);
+        to_delete.push(el);
       }
     }
+    for (let el of to_delete) {
+      this.delete(el);
+    }
+  }
+  sort() {
+    let func;
+    if (this.contents.length != 0 && typeof(this.contents[0]) == "number") {
+      func = function(a,b){return a - b};
+    }
+    this.contents.sort(func)
+    return this;
   }
   clone() {
     let cl = new GeneralSet();
-    cl.add_all(this.contents);
+    cl.add_all(JSON.parse(JSON.stringify(this.contents)));
     return cl;
   }
   zero_free(sizes) {
@@ -945,7 +960,7 @@ class GeneralSet {
 
   collect() {
     // TODO: make this better
-    this.contents.sort();
+    this.sort();
     let res = [];
     for (let el of this.contents) {
       if (!arraysEqual(el, res[res.length - 1])) {
@@ -961,7 +976,7 @@ class GeneralSet {
     return this.contents;
   }
   to_string() {
-    return '{' + this.as_vec().map(x => typeof(x) == 'object' ? "(" + x.toString() + ")" : x.toString()).toString() + '}';
+    return '{' + this.clone().sort().as_vec().map(x => typeof(x) == 'object' ? "(" + x.toString() + ")" : x.toString()).toString() + '}';
   }
 
   // SUMSETS
@@ -991,7 +1006,7 @@ class GeneralSet {
     let res = new GeneralSet();
     let n = G.length;
     if (this.contents.length == 0 || h == 0) {
-      res.add(zeros(n));
+      res.add(n == 1 ? 0 : zeros(n));
       return res;
     }
     let to_add = [];
@@ -1001,7 +1016,7 @@ class GeneralSet {
         to_add.push(
           fold(
             (prev, curr) => {i++; return mod_add(prev, signs[i] == 1 ? curr : neg_elem(curr, G), G)},
-            zeros(n),
+            n == 1 ? 0 : zeros(n),
             indices.map(x => this.contents[x])
           )
         )
@@ -1025,21 +1040,32 @@ class GeneralSet {
   }
 
   hfold_restricted_sumset(h, G) {
+    // console.log("***** start ^ sumset calculation ******");
+    // console.log("contents:", this.contents);
+    // console.log("h:", h);
+    // console.log("G:", G);
     let res = new GeneralSet();
     let n = G.length;
     if (this.contents.length == 0 || h == 0) {
-      res.add(zeros(n));
+      res.add(n == 1 ? 0 : zeros(n));
       return res;
     }
     for (let indices of combinations(range(0, this.contents.length), h)) {
-      res.add(
-        fold(
-          (prev, curr) => mod_add(prev, curr, G),
-          zeros(n),
-          indices.map(x => this.contents[x])
-        )
+      // console.log("    indices:",  indices);
+      let to_add = indices.map(x => this.contents[x]);
+      // console.log('    to_add:', to_add);
+      let added = fold(
+        (prev, curr) => mod_add(prev, curr, G),
+        n == 1 ? 0 : zeros(n),
+        to_add
       );
+      // console.log("    added:", added);
+      res.add(
+        added
+      );
+      // console.log("   res:", res.contents);
     }
+    // console.log("***** end ^ sumset calculation ******");
     return res;
   }
   hfold_interval_restricted_sumset(intv, G) {
@@ -1056,7 +1082,7 @@ class GeneralSet {
     let res = new GeneralSet();
     let n = G.length;
     if (this.contents.length == 0 || h == 0) {
-      res.add(zeros(n));
+      res.add(n == 1 ? 0 : zeros(n));
       return res;
     }
     let to_add = [];
@@ -1066,7 +1092,7 @@ class GeneralSet {
         to_add.push(
           fold(
             (prev, curr) => {i++; return mod_add(prev, signs[i] == 1 ? curr : neg_elem(curr, G), G)},
-            zeros(n),
+            n == 1 ? 0 : zeros(n),
             indices.map(x => this.contents[x])
           )
         )
@@ -1265,6 +1291,12 @@ class Group {
     } else {
       this.SetClass = GeneralSet;
       this.G = this.sizes;
+      if (this.G.length == 1) {
+        this.comb_func = function(x) {return new GeneralSet(x.map(v => v[0]))};
+      } else {
+        this.comb_func = function(x) {return new GeneralSet(x)};
+      }
+      this.comb_func
       if (rel_prime(this.sizes) && this.n <= 31) {
         this.verbose_writer.r_write("The group G[" + this.sizes.toString() + "] is isomorphic to the group G[" + this.n + "]. Using this group instead will speed up calculation.")
       }
@@ -1285,7 +1317,7 @@ class Group {
     if (this.SetClass == FastSet) {
       return this.each_set_exact_helper(this.n, set_size, 'next');
     } else {
-      return combinations(each_element(zeros(this.sizes.length),this.sizes,true),set_size,function(x) {return new GeneralSet(x)});
+      return combinations(each_element(zeros(this.sizes.length),this.sizes,true),set_size,this.comb_func);
     }
   }
   each_set_exact_zero(set_size) {
@@ -1295,7 +1327,7 @@ class Group {
     if (this.SetClass == FastSet) {
       return this.each_set_exact_helper(this.n - 1, set_size, 'next_no_zero');
     } else {
-      return combinations(each_element(zeros(this.sizes.length), this.sizes), set_size, function(x){return new GeneralSet(x)});
+      return combinations(each_element(zeros(this.sizes.length), this.sizes), set_size, this.comb_func);
     }
   }
 
@@ -1643,9 +1675,16 @@ class Group {
     for (let m = 1; m < this.n; m++) {
       let found = false;
       for (let a of this.each_set_exact(m)) {
+        // console.log("-----------------");
+        // console.log(a);
         let k_a = a[sumset_function](k, this.G);
+        // console.log(k_a.to_string());
         let l_a = a[sumset_function](l, this.G);
+        // console.log(l_a.to_string());
+        // stop();
         k_a.intersect(l_a.clone());
+        // console.log("intersect:");
+        // console.log(k_a);
         if (k_a.is_empty()) {
           if (verbose){
             this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which is sum-free");
@@ -1654,6 +1693,7 @@ class Group {
           found = true;
           break;
         }
+        // stop();
       }
       if (!found) {
         if (verbose) {

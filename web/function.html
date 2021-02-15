@@ -432,7 +432,7 @@
               ontimeout: function(response) {
                 set_calc_button(true);
                 console.log(response.msg);
-                document.getElementById('result').innerHTML += ">>> " + response.msg + "\nUse the Notebook for longer computations.";
+                document.getElementById('result').innerHTML += ">>> " + response.msg + "\nUse the Notebook for longer computations.\n";
               },
               timeout: 60000
             });
