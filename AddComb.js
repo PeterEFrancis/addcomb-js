@@ -997,7 +997,7 @@ class GeneralSet {
     let [ia, ib] = intv;
     for (let i = ia; i <= ib; i++) {
       let tmp = this.hfold_sumset(i, G);
-      res.add_all(tmp);
+      res.add_all(tmp.contents);
     }
     return res;
   }
@@ -1034,7 +1034,7 @@ class GeneralSet {
         continue;
       }
       let tmp = this.hfold_signed_sumset(i, G);
-      res = res.add_all(tmp);
+      res = res.add_all(tmp.contents);
     }
     return res;
   }
@@ -1062,7 +1062,7 @@ class GeneralSet {
     let [ia, ib] = intv;
     for (let i = ia; i <= ib; i++) {
       let tmp = this.hfold_restricted_sumset(i, G);
-      res.add_all(tmp);
+      res.add_all(tmp.contents);
     }
     return res;
   }
@@ -1095,7 +1095,7 @@ class GeneralSet {
     let [ia, ib] = intv;
     for (let i = ia; i <= ib; i++) {
       let tmp = this.hfold_restricted_signed_sumset(i, G);
-      res.add_all(tmp);
+      res.add_all(tmp.contents);
     }
     return res;
   }
