@@ -420,8 +420,12 @@
               },
               oncomplete: function(response) {
                 set_calc_button(true);
-                document.getElementById('result').innerHTML += response.data.verbose_string;
+                document.getElementById('result').innerHTML = response.data.verbose_string;
                 document.getElementById('error').innerHTML = '&emsp;';
+                document.getElementById('result').scrollTop = 999999;
+              },
+              onupdate: function(response) {
+                document.getElementById('result').innerHTML = response.data.verbose_string;
                 document.getElementById('result').scrollTop = 999999;
               },
               onerror: function (response) {

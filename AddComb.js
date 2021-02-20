@@ -1562,7 +1562,7 @@ class Group {
     }
     if (verbose) {
       this.verbose_writer.r_write("Set with smallest sumset: A=" +  smallest_set.to_string());
-      this.verbose_writer.r_write("(sumsets is:) " + H_to_string(H) + "A=" + smallest_set[sumset_function](H, this.G).to_string());
+      this.verbose_writer.r_write("(sumset is:) " + H_to_string(H) + "A=" + smallest_set[sumset_function](H, this.G).to_string());
       this.verbose_writer.a_write(curr_smallest);
     }
     return curr_smallest;
@@ -1705,25 +1705,27 @@ class Computer {
   }
 
   start(data) {
-    // data is JSON with purpose, info, timeout, an ontimeout function, and an oncomplete function
+    // data is JSON with purpose, info, timeout, an ontimeout function, onupdate, and an oncomplete function
     const purpose = data.purpose;
     const timeout = data.timeout;
     // kill after timeout
     const w = this.worker;
+    const ontimeout = data.ontimeout || function (x) {console.log('timeout')};
     const id = setTimeout(function() {
-      w.terminate();
-      data.ontimeout({
-        msg: purpose + ' calculation timed out after ' + timeout + 'ms.'
-      });
-    }, data.timeout);
-    // on complete or error
-    this.worker.onmessage = function(msg) {
-      if (msg.data.type == 'complete') {
-        data.oncomplete(msg);
-      } else { // msg.data.type == 'error'
-        data.onerror(msg);
+      if (timeout) {
+        w.terminate();
+        ontimeout({
+          msg: purpose + ' calculation timed out after ' + timeout + 'ms.'
+        });
       }
-      clearTimeout(id);
+    }, data.timeout);
+
+    // responses
+    this.worker.onmessage = function(msg) {
+      data['on' + msg.data.type](msg);
+      if (msg.data.type == 'complete') {
+        clearTimeout(id);
+      }
     }
     // start computation
     this.worker.postMessage({
@@ -1795,7 +1797,24 @@ self.onmessage = function (msg) {
         sizes = sizes.replaceAll('x',',').split(",").map(x => Number(x))
       }
 
-      let verbose_element = {innerHTML:''};
+      // let verbose_element = {innerHTML:''};
+      const self_ = self;
+      let verbose_element = {
+        innerHTMLInternal: "",
+        innerHTMLListener: function(val) {
+          self_.postMessage({
+            type: 'update',
+            verbose_string: this.innerHTML
+          });
+        },
+        set innerHTML(val) {
+          this.innerHTMLInternal = val;
+          this.innerHTMLListener(val);
+        },
+        get innerHTML() {
+          return this.innerHTMLInternal;
+        }
+      };
       let group = new Group(sizes, verbose_element);
       let e_args = parse_args(func, arg);
       let res = group[func](restricted, signed, ...e_args, info.verbose);
@@ -1806,6 +1825,33 @@ self.onmessage = function (msg) {
         verbose_string: verbose_element.innerHTML
       });
     }
+    if (purpose == 'eval') {
+      const self_ = self;
+      let verbose = {
+        innerHTMLInternal: "",
+        innerHTMLListener: function(val) {
+          self_.postMessage({
+            type: 'update',
+            verbose_string: this.innerHTML
+          });
+        },
+        set innerHTML(val) {
+          this.innerHTMLInternal = val;
+          this.innerHTMLListener(val);
+        },
+        get innerHTML() {
+          return this.innerHTMLInternal;
+        }
+      };
+      function print(s) {
+        verbose.innerHTML += s + "\n";
+      }
+      eval(info.str);
+      self.postMessage({
+        type: 'complete'
+      });
+    }
+
   } catch (e) {
     self.postMessage({
       type: 'error',
