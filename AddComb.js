@@ -1285,7 +1285,6 @@ class Group {
       } else {
         this.comb_func = function(x) {return new GeneralSet(x)};
       }
-      this.comb_func
       if (rel_prime(this.sizes) && this.n <= 31) {
         this.verbose_writer.r_write("The group G[" + this.sizes.toString() + "] is isomorphic to the group G[" + this.n + "]. Using this group instead will speed up calculation.")
       }
@@ -1302,11 +1301,11 @@ class Group {
     return new EachSetExact(naivestate, setmask, false).iterable(type);
   }
 
-  each_set_exact(set_size) {
+  each_set_exact(set_size, nozero) {
     if (this.SetClass == FastSet) {
       return this.each_set_exact_helper(this.n, set_size, 'next');
     } else {
-      return combinations(each_element(zeros(this.sizes.length),this.sizes,true),set_size,this.comb_func);
+      return combinations(each_element(zeros(this.sizes.length),this.sizes,!nozero),set_size,this.comb_func);
     }
   }
   each_set_exact_zero(set_size) {
@@ -1663,10 +1662,10 @@ class Group {
     }
     for (let m = 1; m < this.n; m++) {
       let found = false;
-      for (let a of this.each_set_exact(m)) {
+      for (let a of this.each_set_exact(m, restricted && [k,l]==[2,1])) { // if mu is restricted, then 0 cannot be in the
         let k_a = a[sumset_function](k, this.G);
         let l_a = a[sumset_function](l, this.G);
-        k_a.intersect(l_a.clone());
+        k_a.intersect(l_a);
         if (k_a.is_empty()) {
           if (verbose){
             this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which is sum-free");
@@ -1741,117 +1740,165 @@ class Computer {
 }
 
 
+var comp_purposes = {
+  "sumset":function(info) {
+    let H = H_eval(info.H_string);
+    let set_contents = info.set_contents;
+    let restricted = info.restricted;
+    let signed = info.signed;
+    let sizes = info.sizes;
+    if (sizes == "") {
+      throw new Error('You must define a group');
+    } else {
+      sizes = sizes.replaceAll('x',',').split(",").map(x => Number(x))
+    }
+    let group = new Group(sizes);
+
+    if (group.SetClass == FastSet) {
+      if (set_contents.includes('(')) { // TODO: make this check better
+        throw new Error("The group factor orders don't match the set contents.")
+      }
+      set_contents = set_contents.split(',').filter(x => x.length != 0).map(x => Number(x));
+    } else {
+      if (set_contents.includes('(') && group.sizes.length == 1) { // TODO: make this check better
+        throw new Error("The group factor orders don't match the set contents.")
+      }
+      set_contents = eval('[' + set_contents.replaceAll('(','[').replaceAll(')',']') + ']');
+    }
+
+    let set = new group.SetClass();
+    set.add_all(set_contents);
+    let G = group.G;
+    let interval = H_type(H) == 'interval';
+    let sumset_function = 'hfold_' + group.get_opt_string(restricted, signed, interval) + 'sumset';
+    let sumset = set[sumset_function](H,G);
+
+    self.postMessage({
+      type: 'complete',
+      sumset: sumset,
+      verbose_string: "in " + group.to_string() + ", " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + set.to_string() + ' = ' + sumset.to_string()
+    });
+  },
+  "function":function(info) {
+    let func = info.func;
+    let arg = info.arg;
+    let restricted = info.restricted;
+    let signed = info.signed;
+    let sizes = info.sizes;
+    if (sizes == "") {
+      throw new Error('You must define a group');
+    } else {
+      sizes = sizes.replaceAll('x',',').split(",").map(x => Number(x))
+    }
+
+    // let verbose_element = {innerHTML:''};
+    const self_ = self;
+    let verbose_element = {
+      innerHTMLInternal: "",
+      innerHTMLListener: function(val) {
+        self_.postMessage({
+          type: 'update',
+          verbose_string: this.innerHTML
+        });
+      },
+      set innerHTML(val) {
+        this.innerHTMLInternal = val;
+        this.innerHTMLListener(val);
+      },
+      get innerHTML() {
+        return this.innerHTMLInternal;
+      }
+    };
+    let group = new Group(sizes, verbose_element);
+    let e_args = parse_args(func, arg);
+    let res = group[func](restricted, signed, ...e_args, info.verbose);
+
+    self.postMessage({
+      type: 'complete',
+      res: res,
+      verbose_string: verbose_element.innerHTML
+    });
+  },
+  "eval":function(info) {
+    const self_ = self;
+    let verbose = {
+      innerHTMLInternal: "",
+      innerHTMLListener: function(val) {
+        self_.postMessage({
+          type: 'update',
+          verbose_string: this.innerHTML
+        });
+      },
+      set innerHTML(val) {
+        this.innerHTMLInternal = val;
+        this.innerHTMLListener(val);
+      },
+      get innerHTML() {
+        return this.innerHTMLInternal;
+      }
+    };
+    function print(s) {
+      verbose.innerHTML += s + "\n";
+    }
+    eval(info.str);
+    self.postMessage({
+      type: 'complete'
+    });
+  },
+  "mu_r_2_1_help":function(info) {
+    // given group sizes and specified included elememnts (list of integer greycode-ish locations)
+    // let n = info.sizes.reduce((a,b)=>a*b);
+    // let m = info.m;
+    // let forced_max = Math.max(...info.forced);
+    //
+    // let subset_codes = [...combinations(range(0,n))];
+    // let include_code_sets = subset_codes.filter(x => Math.min(...x) > forced_max); // include only sets with codes greater than or equal to the max of forced
+    // let all_sets = each_element(zeros(n),this.sizes,false);
+    // let include_sets = include_code_sets.map(x => new GeneralSet(x.map(y => all_sets[y])));
+    //
+    // let found = false;
+    // for (let gs of include_sets) {
+    //   let h2A = gs.hfold_restricted_sumset(2,info.sizes);
+    //   gs.intersect(h2A);
+    //   if (gs.is_empty()) {
+    //     found = true;
+    //     break;
+    //   }
+    // }
+    // self.postMessage({
+    //   type:'complete',
+    //   found:found,
+    //   set:gs.to_string()
+    // });
+
+  //   let h2A = a[sumset_function](k, this.G);
+  //   let l_a = a[sumset_function](l, this.G);
+  //   k_a.intersect(l_a.clone());
+  //   if (k_a.is_empty()) {
+  //     if (verbose){
+  //       this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which is sum-free");
+  //       this.verbose_writer.r_write("(kA = " + a[sumset_function](k, this.G).to_string() + ", lA = " + l_a.to_string() + ")");
+  //     }
+  //     found = true;
+  //     break;
+  //   }
+  // }
+  // if (!found) {
+  //   if (verbose) {
+  //     this.verbose_writer.r_write("For m=" + m + ", no sum-free sets were found");
+  //     this.verbose_writer.a_write((m - 1));
+  //   }
+  //   return m - 1;
+  // }
+  //
+  }
+};
+
+
 self.onmessage = function (msg) {
   try {
-    let data = msg.data;
-    let purpose = data.purpose;
-    let info = data.info;
-
-    if (purpose == 'sumset') {
-      let H = H_eval(info.H_string);
-      let set_contents = info.set_contents;
-      let restricted = info.restricted;
-      let signed = info.signed;
-      let sizes = info.sizes;
-      if (sizes == "") {
-        throw new Error('You must define a group');
-      } else {
-        sizes = sizes.replaceAll('x',',').split(",").map(x => Number(x))
-      }
-      let group = new Group(sizes);
-
-      if (group.SetClass == FastSet) {
-        if (set_contents.includes('(')) { // TODO: make this check better
-          throw new Error("The group factor orders don't match the set contents.")
-        }
-        set_contents = set_contents.split(',').filter(x => x.length != 0).map(x => Number(x));
-      } else {
-        if (set_contents.includes('(') && group.sizes.length == 1) { // TODO: make this check better
-          throw new Error("The group factor orders don't match the set contents.")
-        }
-        set_contents = eval('[' + set_contents.replaceAll('(','[').replaceAll(')',']') + ']');
-      }
-
-      let set = new group.SetClass();
-      set.add_all(set_contents);
-      let G = group.G;
-      let interval = H_type(H) == 'interval';
-      let sumset_function = 'hfold_' + group.get_opt_string(restricted, signed, interval) + 'sumset';
-      let sumset = set[sumset_function](H,G);
-
-      self.postMessage({
-        type: 'complete',
-        sumset: sumset,
-        verbose_string: "in " + group.to_string() + ", " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + set.to_string() + ' = ' + sumset.to_string()
-      });
-    }
-    if (purpose == 'function') {
-      let func = info.func;
-      let arg = info.arg;
-      let restricted = info.restricted;
-      let signed = info.signed;
-      let sizes = info.sizes;
-      if (sizes == "") {
-        throw new Error('You must define a group');
-      } else {
-        sizes = sizes.replaceAll('x',',').split(",").map(x => Number(x))
-      }
-
-      // let verbose_element = {innerHTML:''};
-      const self_ = self;
-      let verbose_element = {
-        innerHTMLInternal: "",
-        innerHTMLListener: function(val) {
-          self_.postMessage({
-            type: 'update',
-            verbose_string: this.innerHTML
-          });
-        },
-        set innerHTML(val) {
-          this.innerHTMLInternal = val;
-          this.innerHTMLListener(val);
-        },
-        get innerHTML() {
-          return this.innerHTMLInternal;
-        }
-      };
-      let group = new Group(sizes, verbose_element);
-      let e_args = parse_args(func, arg);
-      let res = group[func](restricted, signed, ...e_args, info.verbose);
-
-      self.postMessage({
-        type: 'complete',
-        res: res,
-        verbose_string: verbose_element.innerHTML
-      });
-    }
-    if (purpose == 'eval') {
-      const self_ = self;
-      let verbose = {
-        innerHTMLInternal: "",
-        innerHTMLListener: function(val) {
-          self_.postMessage({
-            type: 'update',
-            verbose_string: this.innerHTML
-          });
-        },
-        set innerHTML(val) {
-          this.innerHTMLInternal = val;
-          this.innerHTMLListener(val);
-        },
-        get innerHTML() {
-          return this.innerHTMLInternal;
-        }
-      };
-      function print(s) {
-        verbose.innerHTML += s + "\n";
-      }
-      eval(info.str);
-      self.postMessage({
-        type: 'complete'
-      });
-    }
-
+    const data = msg.data;
+    comp_purposes[data.purpose](data.info);
   } catch (e) {
     self.postMessage({
       type: 'error',
