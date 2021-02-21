@@ -590,7 +590,7 @@ class FastSet {
     return new FastSet(this.contents);
   }
   zero_free() {
-    return this.has(0);
+    return !this.has(0);
   }
 
 
@@ -1293,11 +1293,11 @@ class Group {
 
 
   each_set_exact_helper(max_size, set_size, type) {
-    if (this.n < set_size) {
+    if (max_size < set_size) {
       return new EachSetExact(0, 0, true).iterable(type);
     }
     let naivestate = (1 << set_size) - 1;
-    let setmask = ~((1 << this.n) - 1);
+    let setmask = ~((1 << max_size) - 1);
     return new EachSetExact(naivestate, setmask, false).iterable(type);
   }
 
@@ -1632,9 +1632,9 @@ class Group {
 
     for (let m = this.n; m >= 1; m--) {
       for (let a of this.each_set_exact_no_zero(m)) {
-        if (a[sumset_function](H,this.n).is_full(this.n).zero_free(this.n)) {
+        if (a[sumset_function](H,this.n).zero_free(this.n)) {
           if (verbose) {
-            this.verbose_writer.r_write("Found A=" + a.to_string() + "which gives a zero-free sumset");
+            this.verbose_writer.r_write("Found A=" + a.to_string() + " which gives a zero-free sumset");
             this.verbose_writer.r_write("(gives:) " + H_to_string(H) + "A=" + a[sumset_function](H, this.G).to_string());
             this.verbose_writer.a_write(m);
           }

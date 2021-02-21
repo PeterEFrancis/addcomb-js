@@ -655,6 +655,7 @@
 
       function write_cell_code(cell_id) {
         codeMirrors[cell_id].setValue(contents[cell_id].code_content);
+        save();
       }
       function write_cell_output(cell_id) {
         DOM_elements[cell_id].verbose.style.color = contents[cell_id].state == 'error' ? 'red' : 'black';
@@ -673,6 +674,7 @@
         } else {
           DOM_elements[cell_id].output_tag.classList.remove('hidden');
         }
+        save();
       }
 
 
@@ -771,10 +773,6 @@
           }
         }
       });
-
-
-
-
 
 
 
