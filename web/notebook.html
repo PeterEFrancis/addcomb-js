@@ -108,7 +108,7 @@
 
       .cell {
         padding-left: 15px;
-        margin-bottom: 20px;
+        /* margin-top: 20px; */
         background-color: #fcfcfc;
 
         padding-top: 10px;
@@ -133,8 +133,31 @@
         color: #b57603;
       }
 
+      .add-btn-bar {
+        margin-bottom: 0px;
+        height: 15px;
+      }
 
+      .add-btn-bar .col-xl-12 {
+        height: 18px;
+      }
 
+      .add-btn-bar button {
+        border-radius: 2px;
+        width: 100%;
+        border: 0;
+        height: 7px;
+        background-color: transparent;
+        /* margin-top: -20px !important; */
+        /* margin-bottom: 8px; */
+        outline: 0px;
+        display: block;
+        margin-top: 4px;
+      }
+
+      .add-btn-bar button:hover {
+        background-color: #02b1fc;
+      }
 
     </style>
 
@@ -320,7 +343,7 @@
         document.getElementById('stop').disabled = !bool;
       }
       const calculation_queue = {
-        ids: [],
+        queue: [],
         computer: null,
         curr: null,
         offer: function(id) {
@@ -329,7 +352,13 @@
             this.computer.stop();
             calc_state(false);
           }
-          this.ids.push(id);
+          if (codeMirrors[id].getValue().trim() == '') {
+            return false;
+          }
+          this.queue.push({
+            id:id,
+            str:codeMirrors[id].getValue()
+          });
           contents[id].state = 'queued';
           contents[id].output_content = '';
           write_cell_output(id);
@@ -344,14 +373,15 @@
           }
         },
         next: function() {
-          if (this.ids.length == 0) {
+          if (this.queue.length == 0) {
             calc_state(false);
             computer = null;
             curr = null;
             return false;
           }
           calc_state(true);
-          const id = Number(this.ids.shift());
+          let id_code = this.queue.shift();
+          const id = Number(id_code.id);
           this.curr = id;
           if (contents[id]) {
             execution_num++;
@@ -362,7 +392,7 @@
             this.computer.start({
               purpose: 'eval',
               info: {
-                str:codeMirrors[id].getValue()
+                str:id_code.str
               },
               oncomplete: function(response) {
                 contents[id].state = 'normal';
@@ -397,11 +427,11 @@
           this.empty();
         },
         empty: function() {
-          for (let id of this.ids) {
-            contents[id].state = 'clear';
-            write_cell_output(id);
+          for (let id_code of this.queue) {
+            contents[id_code.id].state = 'clear';
+            write_cell_output(id_code.id);
           }
-          this.ids = [];
+          this.queue = [];
         }
 
       };
@@ -424,6 +454,11 @@
         let output_div = document.createElement('div'); output_div.classList.add('col-xs-11', 'output-div'); // output_div.setAttribute('id', 'output-div-' + id);
         let verbose = document.createElement('div'); verbose.classList.add('verbose'); // verbose.setAttribute('id', 'verbose-' + id);
 
+        let add_bar = document.createElement('div'); add_bar.classList.add('container', 'add-btn-bar');
+        let add_bar_row = document.createElement('div'); add_bar_row.classList.add('row');
+        let add_bar_col = document.createElement('div'); add_bar_col.classList.add('col-xl-12');
+        let add_btn_bar = document.createElement('button');
+
         cell.appendChild(row1);
           row1.appendChild(code_tag);
             code_tag.innerHTML = "[ ]:";
@@ -436,6 +471,10 @@
           row2.appendChild(output_div);
             output_div.appendChild(verbose);
 
+        add_bar.appendChild(add_bar_row);
+          add_bar_row.appendChild(add_bar_col);
+            add_bar_col.appendChild(add_btn_bar);
+
         return {
           cell: cell,
           code_tag: code_tag,
@@ -443,7 +482,8 @@
           id_note: id_note,
           output_tag: output_tag,
           output_div: output_div,
-          verbose: verbose
+          verbose: verbose,
+          add_bar:add_bar
         };
       }
 
@@ -453,6 +493,7 @@
           let cell = DOM_elements[id].cell;
           let code_div = DOM_elements[id].code_div;
           let cm = codeMirrors[id];
+          let add_bar = DOM_elements[id].add_bar;
           cell.onclick = function() {
             select_cell(id);
           };
@@ -482,6 +523,9 @@
               }
             ]
           };
+          add_bar.onclick = function() {
+            insert_blank_cell(id +1);
+          }
         }
       }
 
@@ -502,11 +546,13 @@
         return cm;
       }
 
-      function put_cell_on_page_at(cell, cell_id) {
+      function put_cell_on_page_at(dom_els, cell_id) {
         if (cell_id && cell_id != get_num_cells() && get_num_cells() > 0) {
-          cell_list.insertBefore(cell, DOM_elements[cell_id + 1].cell);
+          cell_list.insertBefore(dom_els.cell, DOM_elements[cell_id + 1].cell);
+          cell_list.insertBefore(dom_els.add_bar, DOM_elements[cell_id + 1].cell);
         } else {
-          cell_list.appendChild(cell);
+          cell_list.appendChild(dom_els.cell);
+          cell_list.appendChild(dom_els.add_bar);
         }
       }
 
@@ -533,7 +579,7 @@
         contents = insert(contents, cell_id, content);
         let cell_DOM = generate_cell_DOM(cell_id, content);
         DOM_elements = insert(DOM_elements, cell_id, cell_DOM);
-        put_cell_on_page_at(DOM_elements[cell_id].cell, cell_id);
+        put_cell_on_page_at(DOM_elements[cell_id], cell_id);
         let cm = generate_codeMirror(cell_id);
         codeMirrors = insert(codeMirrors, cell_id, cm);
         renumber_id_notes();
@@ -546,6 +592,7 @@
       function delete_cell(cell_id) {
         contents = remove(contents, cell_id);
         DOM_elements[selected_cell].cell.remove();
+        DOM_elements[selected_cell].add_bar.remove();
         DOM_elements = remove(DOM_elements, cell_id);
         codeMirrors = remove(codeMirrors, cell_id);
         renumber_id_notes();
