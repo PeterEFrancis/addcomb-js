@@ -48,7 +48,7 @@
     <style>
 
       body {
-        min-width: 500px;
+        min-width: 530px;
       }
 
       .verbose {
@@ -224,7 +224,7 @@
           </button>
         </div>
         <div class="col-xs-4 text-center">
-          <button id="run" class="btn btn-success" onclick="calculation_queue.offer(selected_cell)">
+          <button id="run" class="btn btn-success" onclick="offer_selected()">
             <span class="glyphicon glyphicon-play"></span>
           </button>
           <button id="stop" class="btn btn-danger" onclick="calculation_queue.stop()" disabled>
@@ -237,6 +237,9 @@
           </button>
           <button class="btn btn-primary" onclick="SaveAsFile(JSON.stringify(contents), 'AddComb Notebook ' + (new Date().toUTCString()) + '.acnb')">
             <span class="glyphicon glyphicon-cloud-download"></span>
+          </button>
+          <button class="btn btn-info" onclick="save()" data-toggle="tooltip" data-placement="top" title="ctrl + s">
+            <span class="glyphicon glyphicon-floppy-disk"></span>
           </button>
         </div>
       </div>
@@ -334,6 +337,12 @@
         selected_cell = cell_id;
       }
 
+
+      function offer_selected() {
+        if (selected_cell) {
+          calculation_queue.offer(selected_cell);
+        }
+      }
 
 
       var calculating = false;
@@ -719,16 +728,23 @@
       }
 
 
-
+      function save() {
+        localStorage.setItem('contents', JSON.stringify(contents));
+      }
 
 
       document.onkeydown = function(e) {
         if (event.code == "Enter" && event.shiftKey) {
           if (selected_cell) {
             e.preventDefault();
-            calculation_queue.offer(selected_cell);
+            offer_selected();
             return false;
           }
+        }
+        else if (event.code == "KeyS" && (event.metaKey || event.ctrlKey)) {
+          e.preventDefault();
+          save();
+          return false;
         }
       }
       $('body').dbKeypress(65, {
@@ -757,16 +773,21 @@
       });
 
 
+
+
+
+
+
       $(document).ready(function(){
         $('[data-toggle="tooltip"]').tooltip();
 
+        let saved = localStorage.getItem('contents');
+        if (saved) {
+          contents = JSON.parse(saved)
+        }
+        build_page_from_contents();
       });
 
-      build_page_from_contents();
-
-      calculation_queue.offer(1);
-      calculation_queue.offer(2);
-      calculation_queue.offer(3);
 
 
 

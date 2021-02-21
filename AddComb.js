@@ -1632,7 +1632,7 @@ class Group {
 
     for (let m = this.n; m >= 1; m--) {
       for (let a of this.each_set_exact_no_zero(m)) {
-        if (a[sumset_function](H,this.n).is_full(this.n).zero_free(n)) {
+        if (a[sumset_function](H,this.n).is_full(this.n).zero_free(this.n)) {
           if (verbose) {
             this.verbose_writer.r_write("Found A=" + a.to_string() + "which gives a zero-free sumset");
             this.verbose_writer.r_write("(gives:) " + H_to_string(H) + "A=" + a[sumset_function](H, this.G).to_string());
