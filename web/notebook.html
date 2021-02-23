@@ -670,7 +670,7 @@
           'queued':'',
           'clear':''
         }[contents[cell_id].state] + ']:';
-        if (['queued', 'clear'].includes(contents[cell_id].state)) {
+        if (['queued', 'clear'].includes(contents[cell_id].state) || contents[cell_id].output_content == '') {
           DOM_elements[cell_id].output_tag.classList.add('hidden');
         } else {
           DOM_elements[cell_id].output_tag.classList.remove('hidden');
@@ -733,8 +733,8 @@
       function get_string_contents() {
         let temp = JSON.parse(JSON.stringify(contents));
         for (let i = 1; i < temp.length; i++) {
-          temp[i].state = 'normal';
           temp[i].tag = ' ';
+          temp[i].state = temp[i].state == 'error' ? 'error' : 'normal';
         }
         return JSON.stringify(temp);
       }
