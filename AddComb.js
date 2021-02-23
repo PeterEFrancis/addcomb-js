@@ -1330,6 +1330,7 @@ class Group {
 
   // chapter a
   nu(restricted, signed, m, H, verbose) {
+    if (H_type(H) == 'literal') unimplemented();
     let interval = H_type(H) == "interval";
     let opt_string = this.get_opt_string(restricted, signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
@@ -1361,7 +1362,9 @@ class Group {
   }
   // chapter b
   phi(restricted, signed, H, verbose) {
+    if (H_type(H) == 'literal') unimplemented();
     let interval = H_type(H) == "interval";
+
     let opt_string = this.get_opt_string(restricted, signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
 
@@ -1371,7 +1374,7 @@ class Group {
       if (signed) {
         for (let m = 1; m < this.n; m++) {
           for (let a of this.each_set_exact(m)) {
-            if (a[sumset_function](H, this.G).is_full(this.n)) {
+            if (a[sumset_function](H, this.G).is_full(this.G)) {
               if (verbose) {
                 this.verbose_writer.r_write("Found spanning set: " + a.to_string());
                 this.verbose_writer.a_write(m);
@@ -1485,6 +1488,7 @@ class Group {
   }
   // chapter c
   sigma(restricted, signed, H, verbose) {
+    if (H_type(H) == 'literal') unimplemented();
     let interval = H_type(H) == "interval";
     let opt_string = this.get_opt_string(restricted, signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
@@ -1544,6 +1548,7 @@ class Group {
   }
   // chapter d
   rho(restricted, signed, m, H, verbose) {
+    if (H_type(H) == 'literal') unimplemented();
     let interval = H_type(H) == "interval";
     let opt_string = this.get_opt_string(restricted, signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
@@ -1568,6 +1573,7 @@ class Group {
   }
   // chapter e
   chi(restricted, signed, H, verbose) {
+    if (H_type(H) == 'literal') unimplemented();
     let interval = H_type(H) == "interval";
     let opt_string = this.get_opt_string(restricted, signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
@@ -1598,6 +1604,7 @@ class Group {
   }
   // cahpter f
   tau(restricted, signed, H, verbose) {
+    if (H_type(H) == 'literal') unimplemented();
     let interval = H_type(H) == "interval";
     let opt_string = this.get_opt_string(restricted, signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
@@ -1654,7 +1661,6 @@ class Group {
   // chapter g
   mu(restricted, signed, H, verbose) {
     if (H_type(H) != "literal") unimplemented();
-
     let opt_string = this.get_opt_string(restricted, signed);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
 
