@@ -235,7 +235,7 @@
           <button class="btn btn-warning" data-toggle="modal" data-target="#open-modal">
             <span class="glyphicon glyphicon-folder-open"></span>
           </button>
-          <button class="btn btn-primary" onclick="SaveAsFile(JSON.stringify(contents), 'AddComb Notebook ' + (new Date().toUTCString()) + '.acnb')">
+          <button class="btn btn-primary" onclick="SaveAsFile(get_string_contents(), 'AddComb Notebook ' + (new Date().toUTCString()) + '.acnb')">
             <span class="glyphicon glyphicon-cloud-download"></span>
           </button>
           <button class="btn btn-info" onclick="save()" data-toggle="tooltip" data-placement="top" title="ctrl + s">
@@ -277,7 +277,7 @@
         return [...arr.slice(0, index), ...arr.slice(1 + index)];
       }
 
-      var contents = [null,
+      const DEFAULT = [null,
         {
           code_content: "let g = new Group([3,3], verbose);\ng.mu(true, false, new Set([1, 2]), true);",
           tag: " ",
@@ -299,6 +299,7 @@
       ];
 
 
+      var contents = [null];
       var DOM_elements = [null];
       var codeMirrors = [null];
 
@@ -389,8 +390,8 @@
             return false;
           }
           calc_state(true);
-          let id_code = this.queue.shift();
-          const id = Number(id_code.id);
+          let execute_info = this.queue.shift();
+          const id = Number(execute_info.id);
           this.curr = id;
           if (contents[id]) {
             execution_num++;
@@ -401,7 +402,7 @@
             this.computer.start({
               purpose: 'eval',
               info: {
-                str:id_code.str
+                str:execute_info.str
               },
               oncomplete: function(response) {
                 contents[id].state = 'normal';
@@ -436,9 +437,9 @@
           this.empty();
         },
         empty: function() {
-          for (let id_code of this.queue) {
-            contents[id_code.id].state = 'clear';
-            write_cell_output(id_code.id);
+          for (let execute_info of this.queue) {
+            contents[execute_info.id].state = 'clear';
+            write_cell_output(execute_info.id);
           }
           this.queue = [];
         }
@@ -729,9 +730,18 @@
         fr.readAsText(file);
       }
 
+      function get_string_contents() {
+        let temp = JSON.parse(JSON.stringify(contents));
+        for (let i = 1; i < temp.length; i++) {
+          temp[i].state = 'normal';
+          temp[i].tag = ' ';
+        }
+        return JSON.stringify(temp);
+      }
+
 
       function save() {
-        localStorage.setItem('contents', JSON.stringify(contents));
+        localStorage.setItem('contents', get_string_contents());
       }
 
 
@@ -782,6 +792,8 @@
         let saved = localStorage.getItem('contents');
         if (saved) {
           contents = JSON.parse(saved)
+        } else {
+          contents = DEFAULT;
         }
         build_page_from_contents();
       });
