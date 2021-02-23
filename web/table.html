@@ -432,7 +432,7 @@
                   restricted:rs.includes('r'),
                   signed:rs.includes('s'),
                   sizes:document.getElementById('G').value.replaceAll('r',r).replaceAll('c',c),
-                  // verbose:document.getElementById('verbose').checked
+                  verbose:false
                 },
                 oncomplete: function(response) {
                   cell.innerHTML = response.data.res;
