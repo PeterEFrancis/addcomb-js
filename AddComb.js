@@ -954,7 +954,7 @@ class GeneralSet {
     return cl;
   }
   zero_free(sizes) {
-    return !this.has(range(sizes).map(x => 0));
+    return !this.has(zeros(sizes.length));
   }
 
 
@@ -983,7 +983,7 @@ class GeneralSet {
   hfold_sumset(h, G) {
     let res = new GeneralSet();
     let n = G.length;
-    if (this.contents == 0 || h == 0) {
+    if (this.contents.length == 0 || h == 0) {
       this.add(zeros(G.length));
       return res;
     }
@@ -1285,7 +1285,7 @@ class Group {
       } else {
         this.comb_func = function(x) {return new GeneralSet(x)};
       }
-      if (rel_prime(this.sizes) && this.n <= 31) {
+      if (rel_prime(this.sizes) && this.n <= 31 && verbose_element) {
         this.verbose_writer.r_write("The group G[" + this.sizes.toString() + "] is isomorphic to the group G[" + this.n + "]. Using this group instead will speed up calculation.")
       }
     }
@@ -1632,7 +1632,7 @@ class Group {
 
     for (let m = this.n; m >= 1; m--) {
       for (let a of this.each_set_exact_no_zero(m)) {
-        if (a[sumset_function](H,this.n).zero_free(this.n)) {
+        if (a[sumset_function](H,this.G).zero_free(this.G)) {
           if (verbose) {
             this.verbose_writer.r_write("Found A=" + a.to_string() + " which gives a zero-free sumset");
             this.verbose_writer.r_write("(gives:) " + H_to_string(H) + "A=" + a[sumset_function](H, this.G).to_string());
@@ -1641,8 +1641,15 @@ class Group {
           return m;
         }
       }
+      if (verbose) {
+        this.verbose_writer.r_write("No subsets of size " + m + " give a zero-free sumset");
+      }
     }
-    unreachable();
+    if (verbose) {
+      this.verbose_writer.r_write("Found no sets with give zero-free sumsetst");
+      this.verbose_writer.a_write(0);
+    }
+    return 0;
   }
   // chapter g
   mu(restricted, signed, H, verbose) {
@@ -1808,7 +1815,7 @@ var comp_purposes = {
         return this.innerHTMLInternal;
       }
     };
-    let group = new Group(sizes, verbose_element);
+    let group = new Group(sizes, info.verbose ? verbose_element : false);
     let e_args = parse_args(func, arg);
     let res = group[func](restricted, signed, ...e_args, info.verbose);
 
