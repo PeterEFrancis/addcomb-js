@@ -1739,7 +1739,6 @@ class Computer {
 
 }
 
-
 var comp_purposes = {
   "sumset":function(info) {
     let H = H_eval(info.H_string);
@@ -1846,51 +1845,24 @@ var comp_purposes = {
     });
   },
   "mu_r_2_1_help":function(info) {
-    // given group sizes and specified included elememnts (list of integer greycode-ish locations)
-    // let n = info.sizes.reduce((a,b)=>a*b);
-    // let m = info.m;
-    // let forced_max = Math.max(...info.forced);
-    //
-    // let subset_codes = [...combinations(range(0,n))];
-    // let include_code_sets = subset_codes.filter(x => Math.min(...x) > forced_max); // include only sets with codes greater than or equal to the max of forced
-    // let all_sets = each_element(zeros(n),this.sizes,false);
-    // let include_sets = include_code_sets.map(x => new GeneralSet(x.map(y => all_sets[y])));
-    //
-    // let found = false;
-    // for (let gs of include_sets) {
-    //   let h2A = gs.hfold_restricted_sumset(2,info.sizes);
-    //   gs.intersect(h2A);
-    //   if (gs.is_empty()) {
-    //     found = true;
-    //     break;
-    //   }
-    // }
-    // self.postMessage({
-    //   type:'complete',
-    //   found:found,
-    //   set:gs.to_string()
-    // });
+    let found = false;
+    let set = null;
+    for (let indices of info.combs) {
+      let gs = new GeneralSet(indices.map(i => info.all_elements[i]));
+      let h2A = gs.hfold_restricted_sumset(2,info.sizes);
+      h2A.intersect(gs);
+      if (h2A.is_empty()) {
+        found = true;
+        set = gs;
+        break;
+      }
+    }
+    self.postMessage({
+      type:'complete',
+      found:found,
+      set:found ? set.to_string() : null
+    });
 
-  //   let h2A = a[sumset_function](k, this.G);
-  //   let l_a = a[sumset_function](l, this.G);
-  //   k_a.intersect(l_a.clone());
-  //   if (k_a.is_empty()) {
-  //     if (verbose){
-  //       this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which is sum-free");
-  //       this.verbose_writer.r_write("(kA = " + a[sumset_function](k, this.G).to_string() + ", lA = " + l_a.to_string() + ")");
-  //     }
-  //     found = true;
-  //     break;
-  //   }
-  // }
-  // if (!found) {
-  //   if (verbose) {
-  //     this.verbose_writer.r_write("For m=" + m + ", no sum-free sets were found");
-  //     this.verbose_writer.a_write((m - 1));
-  //   }
-  //   return m - 1;
-  // }
-  //
   }
 };
 
