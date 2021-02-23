@@ -954,7 +954,7 @@ class GeneralSet {
     return cl;
   }
   zero_free(sizes) {
-    return !this.has(range(sizes).map(x => 0));
+    return !this.has(zeros(sizes.length));
   }
 
 
