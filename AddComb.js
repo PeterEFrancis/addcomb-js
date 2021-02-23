@@ -1286,7 +1286,7 @@ class Group {
         this.comb_func = function(x) {return new GeneralSet(x)};
       }
       if (rel_prime(this.sizes) && this.n <= 31 && verbose_element) {
-        this.verbose_writer.r_write("The group G[" + this.sizes.toString() + "] is isomorphic to the group G[" + this.n + "]. Using this group instead will speed up calculation.")
+        this.verbose_writer.write("The group G[" + this.sizes.toString() + "] is isomorphic to the group G[" + this.n + "]. Using this group instead will speed up calculation.")
       }
     }
   }
@@ -1649,7 +1649,7 @@ class Group {
         }
       }
       if (verbose) {
-        this.verbose_writer.r_write("No subsets of size " + m + " give a zero-free sumset");
+        this.verbose_writer.r_write("No subsets of size m=" + m + " give a zero-free sumset");
       }
     }
     if (verbose) {
