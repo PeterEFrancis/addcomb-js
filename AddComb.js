@@ -1653,7 +1653,7 @@ class Group {
       }
     }
     if (verbose) {
-      this.verbose_writer.r_write("Found no sets with give zero-free sumsetst");
+      this.verbose_writer.r_write("Found no sets with give zero-free sumsets");
       this.verbose_writer.a_write(0);
     }
     return 0;
