@@ -1893,9 +1893,10 @@ var comp_purposes = {
   },
   "timed_eval":function(info) {
     let t_0 = new Date();
-    let res = eval(info.str);
+    for (let i = 0; i < info.N; i++) {
+      eval(info.str);
+    }
     return {
-      res: res,
       dt: new Date() - t_0
     };
   },
