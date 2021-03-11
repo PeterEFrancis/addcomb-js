@@ -435,7 +435,7 @@
                   verbose:false
                 },
                 oncomplete: function(response) {
-                  cell.innerHTML = response.data.res;
+                  cell.innerHTML = response.data.res.num;
                   cell.setAttribute('state', 'open');
                   document.getElementById('error').innerHTML = '&emsp;';
                   // if (document.getElementById('verbose').checked) {

@@ -1824,10 +1824,10 @@ var comp_purposes = {
     };
     let group = new Group(sizes, info.verbose ? verbose_element : false);
     let e_args = parse_args(func, arg);
-    let res = group[func](restricted, signed, ...e_args, info.verbose);
+    let num = group[func](restricted, signed, ...e_args, info.verbose);
 
     return {
-      res: res,
+      num: num,
       verbose_string: verbose_element.innerHTML
     };
   },
