@@ -1890,7 +1890,15 @@ var comp_purposes = {
       }
     }
     return found;
-  }
+  },
+  "timed_eval":function(info) {
+    let t_0 = new Date();
+    let res = eval(info.str);
+    return {
+      res: res,
+      dt: new Date() - t_0
+    };
+  },
 };
 
 

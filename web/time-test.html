@@ -1,75 +1,154 @@
-<html>
+<!DOCTYPE html>
+<html dir="ltr" lang="en">
   <head>
+
+    <meta charset="utf-8">
+    <link href="favicon.ico" rel="icon" type="image/x-icon">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <title>
+      AddComb.js | Function Calculator
+    </title>
+
+    <!-- addComb -->
     <script src="../AddComb.js"></script>
+
+    <!-- Bootstrap -->
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+
+    <!-- mathjax -->
+    <!-- <script type="text/x-mathjax-config">
+      MathJax.Hub.Config({
+        tex2jax: {
+          inlineMath: [['$','$'], ['\\(','\\)']]
+        }
+      });
+    </script>
+    <script async src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-MML-AM_CHTML"></script> -->
+
+    <!-- KaTeX -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.css" integrity="sha384-AfEj0r4/OFrOo5t7NnNe46zW/tFgW6x/bCJG8FqQCEo3+Aro6EYUG4+cU+KJWu/X" crossorigin="anonymous">
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/katex.min.js" integrity="sha384-g7c+Jr9ZivxKLnZTDUhnkOnsh30B4H0rpLUpJ4jAIKs4fnJI+sEnkvrMWph2EDg4" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/katex@0.12.0/dist/contrib/auto-render.min.js" integrity="sha384-mll67QQFJfxn0IYznZYonOWZ644AWYC+Pt2cHqMaRhXVrursRwvLnLaebdGIlYNa" crossorigin="anonymous" onload='renderMathInElement(document.body, {delimiters:[{left: "$$", right: "$$", display: true},{left: "$", right: "$", display: false}]});'></script>
+
+    <!-- font -->
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,300;0,400;0,500;0,700;1,300;1,400;1,500;1,700&display=swap" rel="stylesheet">
+
+    <style>
+
+
+      .input-group-el {
+        font-size: 18px;
+        line-height: 1.3333333;
+        height: 46px
+      }
+      select {
+        width: 50px !important;
+        padding: 5px !important;
+      }
+      textarea {
+        width: 100%;
+        height: max(100px, calc(100vh - 600px));
+        min-height: 100px;
+        resize: vertical;
+        font-family: monospace;
+      }
+    </style>
+
   </head>
   <body>
-    <button onclick="test();">test()</button>
-    <br><br>
-    <textarea id="verbose" rows='30' style="width:100%" readonly></textarea>
+
+    <nav class="navbar navbar-default bg-light" style="border-radius: 0px;">
+      <div class="container-fluid">
+        <div class="navbar-header">
+          <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#myNavbar">
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+            <span class="icon-bar"></span>
+          </button>
+          <a class="navbar-brand" href="index.html">AddComb.js</a>
+        </div>
+        <div class="collapse navbar-collapse" id="myNavbar">
+          <ul class="nav navbar-nav">
+            <li class="nav-item">
+              <a class="nav-link" href="function.html">Functions</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="sumset.html">Sumsets</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="table.html">Tables</a>
+            </li>
+            <li class="nav-item">
+              <a class="nav-link" href="notebook.html">Notebook</a>
+            </li>
+            <li class="nav-item active">
+              <a class="nav-link" href="time_test.html">Time Check</a>
+            </li>
+          </ul>
+          <ul class="nav navbar-nav navbar-right">
+            <li class="nav-item">
+              <a href="test.html">Test Cases</a></li>
+          </ul>
+        </div>
+      </div>
+    </nav>
+
+    <div class="container">
+      <div class="row" style="margin-bottom: 20px;">
+        <div class="col-md-12 text-center">
+          <h1>Time Check</h1>
+        </div>
+      </div>
+
+      <div class="row">
+        <div class="col-sm-6 text-center">
+          <input id="G" class="form-control" placeholder="group sizes (G) ex:2x4"/>
+          <input id="m" class="form-control" placeholder="subset size (m)"/>
+          <input id="h" class="form-control" placeholder="sumset fold number (h)"/>
+          <br>
+          <button id="calc" class="btn btn-primary btn-block" onclick="test()">Test</button>
+        </div>
+        <div class="col-sm-6 text-center">
+          <textarea id="result"></textarea>
+        </div>
+      </div>
+
+    </div>
+
+    <script>
+      function test() {
+        let G = JSON.parse('[' + document.getElementById('G').value.replaceAll('x',',') + ']');
+        let m = Number(document.getElementById('m').value);
+        let h = Number(document.getElementById('h').value);
+
+        let group = new Group(G);
+        let a = group.each_set_exact(m).next().value;
+
+        let str = "for (let i = 0; i < 100; i++) {a.hfold_sumset("+h+")}";
+
+        let computer = new Computer('../AddComb.js');
+        computer.start({
+          purpose: 'timed_eval',
+          info: {
+            str:str
+          },
+          oncomplete: function(response) {
+            console.log(response.data);
+          },
+          onupdate: function(response) {
+            console.log(response.data);
+          },
+          onerror: function (response) {
+            console.log(response.data);
+          }
+        });
+      }
+    </script>
+
+
   </body>
-  <script>
-
-
-
-
-
-
-
-    // const verbose = document.getElementById('verbose');
-    //
-    // const g = new Group([29],verbose)
-
-    // function test() {
-    //   console.log('start')
-    //   const num = 20;
-    //
-    //   const d = new Date().getTime();
-    //
-    //   for (var i = 0; i < num; i++) {
-    //     g.nu(false, false, 7, 2, false);
-    //   }
-    //
-    //
-    //   console.log((new Date().getTime() - d) / num);
-    // }
-
-
-    // class Test {
-    //
-    //   constructor(start, stop, doneflag) {
-    //     this.start = start;
-    //     this.stop = stop;
-    //     this.curr = start;
-    //     this.doneflag = doneflag;
-    //   }
-    //
-    //   next() {
-    //     this.curr++;
-    //     if (this.curr == this.stop) {
-    //       this.doneflag = true;
-    //       return this.curr;
-    //     }
-    //     return this.curr;
-    //   }
-    //
-    //   *iterable() {
-    //     while (!this.doneflag) {
-    //       yield this.next();
-    //     }
-    //     return null;
-    //   }
-    //
-    // }
-    //
-    // var t = new Test(0,10,false);
-    //
-    // for (var el of t.iterable()) {
-    //   console.log(el);
-    // }
-
-
-
-
-
-  </script>
 </html>
