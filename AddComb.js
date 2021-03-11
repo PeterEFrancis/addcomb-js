@@ -1675,7 +1675,7 @@ class Group {
     }
     for (let m = 1; m < this.n; m++) {
       let found = false;
-      for (let a of this.each_set_exact(m, restricted && [k,l]==[2,1])) { // if mu is restricted, then 0 cannot be in the
+      for (let a of this[restricted && [k,l]==[2,1] ? 'each_set_exact_no_zero' : 'each_set_exact'](m)) { // if mu is restricted, then 0 cannot be in the subset
         let k_a = a[sumset_function](k, this.G);
         let l_a = a[sumset_function](l, this.G);
         k_a.intersect(l_a);
@@ -1785,11 +1785,10 @@ var comp_purposes = {
     let sumset_function = 'hfold_' + group.get_opt_string(restricted, signed, interval) + 'sumset';
     let sumset = set[sumset_function](H,G);
 
-    self.postMessage({
-      type: 'complete',
+    return {
       sumset: sumset,
       verbose_string: "in " + group.to_string() + ", " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + set.to_string() + ' = ' + sumset.to_string()
-    });
+    };
   },
   "function":function(info) {
     let func = info.func;
@@ -1810,7 +1809,9 @@ var comp_purposes = {
       innerHTMLListener: function(val) {
         self_.postMessage({
           type: 'update',
-          verbose_string: this.innerHTML
+          msg: {
+            verbose_string: this.innerHTML
+          }
         });
       },
       set innerHTML(val) {
@@ -1825,11 +1826,10 @@ var comp_purposes = {
     let e_args = parse_args(func, arg);
     let res = group[func](restricted, signed, ...e_args, info.verbose);
 
-    self.postMessage({
-      type: 'complete',
+    return {
       res: res,
       verbose_string: verbose_element.innerHTML
-    });
+    };
   },
   "eval":function(info) {
     const self_ = self;
@@ -1838,7 +1838,9 @@ var comp_purposes = {
       innerHTMLListener: function(val) {
         self_.postMessage({
           type: 'update',
-          verbose_string: this.innerHTML
+          msg: {
+            verbose_string: this.innerHTML
+          }
         });
       },
       set innerHTML(val) {
@@ -1849,13 +1851,14 @@ var comp_purposes = {
         return this.innerHTMLInternal;
       }
     };
-    function print(s) {
-      verbose.innerHTML += s + "\n";
+    function print() {
+      let args = [...arguments];
+      verbose.innerHTML += args.map(x => typeof(x) == 'string' ? x : JSON.stringify(x)).join(' ') + "\n";
     }
-    eval(info.str);
-    self.postMessage({
-      type: 'complete'
-    });
+    return eval(info.str);
+    // self.postMessage({
+    //   type: 'complete'
+    // });
   },
   "mu_r_2_1_help":function(info) {
     let found = false;
@@ -1870,12 +1873,23 @@ var comp_purposes = {
         break;
       }
     }
-    self.postMessage({
-      type:'complete',
+    return {
       found:found,
       set:found ? set.to_string() : null
-    });
-
+    };
+  },
+  "complete_helper":function(info) {
+    let found = [];
+    for (let a_ of info.combs) {
+      let a = new GeneralSet(a_);
+      let k_a = a.hfold_restricted_sumset(2, [info.n]);
+      let s = k_a.size();
+      k_a.intersect(a);
+      if (k_a.is_empty() && a.size() + s == info.n) {
+        found.push(a.as_vec());
+      }
+    }
+    return found;
   }
 };
 
@@ -1883,7 +1897,10 @@ var comp_purposes = {
 self.onmessage = function (msg) {
   try {
     const data = msg.data;
-    comp_purposes[data.purpose](data.info);
+    self.postMessage({
+      type: 'complete',
+      res: comp_purposes[data.purpose](data.info)
+    });
   } catch (e) {
     self.postMessage({
       type: 'error',
