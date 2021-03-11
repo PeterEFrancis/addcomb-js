@@ -1355,7 +1355,7 @@ class Group {
     }
     if (verbose) {
       this.verbose_writer.r_write("Set with greatest sumset: A=" + greatest_set.to_string());
-      this.verbose_writer.r_write("(sumset is:) " + H_to_string(H) + "A=" + greatest_set[sumset_function](H.set, this.G).to_string());
+      this.verbose_writer.r_write("(sumset is:) " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + "A=" + greatest_set[sumset_function](H.set, this.G).to_string());
       this.verbose_writer.a_write(curr_greatest);
     }
     return curr_greatest;
@@ -1376,7 +1376,7 @@ class Group {
           for (let a of this.each_set_exact(m)) {
             if (a[sumset_function](H, this.G).is_full(this.G)) {
               if (verbose) {
-                this.verbose_writer.r_write("Found spanning set: " + a.to_string());
+                this.verbose_writer.r_write("Found spanning set: A=" + a.to_string());
                 this.verbose_writer.a_write(m);
               }
               return m;
@@ -1586,7 +1586,7 @@ class Group {
         if (!a[sumset_function](H,this.n).is_full(this.n)) {
           if (verbose) {
             this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which doesn't give a full sumset");
-            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + "A=" + a[sumset_function](H, this.G).to_string());
+            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + "A=" + a[sumset_function](H, this.G).to_string());
           }
           found = true;
           break;
@@ -1594,7 +1594,7 @@ class Group {
       }
       if (!found) {
         if (verbose) {
-          this.verbose_writer.r_write("Every " + H_to_string(H) + "-fold sumset of a subset of size " + m + " is full");
+          this.verbose_writer.r_write("Every " + (restricted ? "restricted" : "") + (signed ? "signed" : "") + H_to_string(H) + "-fold sumset of a subset of size " + m + " is full");
           this.verbose_writer.a_write(m);
         }
         return m;
@@ -1642,7 +1642,7 @@ class Group {
         if (a[sumset_function](H,this.G).zero_free(this.G)) {
           if (verbose) {
             this.verbose_writer.r_write("Found A=" + a.to_string() + " which gives a zero-free sumset");
-            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + "A=" + a[sumset_function](H, this.G).to_string());
+            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + "A=" + a[sumset_function](H, this.G).to_string());
             this.verbose_writer.a_write(m);
           }
           return m;
