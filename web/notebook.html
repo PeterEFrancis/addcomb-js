@@ -411,7 +411,7 @@
               },
               onupdate: function(response) {
                 contents[id].state = 'calc';
-                contents[id].output_content = response.data.verbose_string;
+                contents[id].output_content = response.data.msg.verbose_string;
                 write_cell_output(id);
               },
               onerror: function (response) {
@@ -743,6 +743,8 @@
       function save() {
         localStorage.setItem('contents', get_string_contents());
       }
+
+      setInterval(save, 10000);
 
 
       document.onkeydown = function(e) {

@@ -251,7 +251,7 @@
             },
             oncomplete: function(response) {
               set_calc_button(true);
-              document.getElementById('result').innerHTML += ">>> " + response.data.verbose_string + "\n";
+              document.getElementById('result').innerHTML += ">>> " + response.data.res.verbose_string + "\n";
               document.getElementById('error').innerHTML = '&emsp;';
             },
             onerror: function(response) {
