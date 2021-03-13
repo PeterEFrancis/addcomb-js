@@ -51,7 +51,7 @@
       }
       textarea {
         width: 100%;
-        height: 200px;
+        height: 400px;
         resize: vertical;
         font-family: monospace;
       }
@@ -102,11 +102,12 @@
       <div class="row" style="margin-bottom: 20px;">
         <div class="col-md-12 text-center">
           <h1>Time Check</h1>
+          <p class="text-center">To use, enter the group sizes, subset size, h value, and number of test trials and calculate the time spent on one sumset computation.</p>
         </div>
       </div>
 
       <div class="row">
-        <div class="col-sm-6">
+        <div class="col-sm-4">
           <div class="input-group">
             <span class="input-group-addon">group sizes (G)</span>
             <input id="G" class="form-control" placeholder="ex: 2x4" value="2x4"/>
@@ -116,8 +117,8 @@
             <input id="m" class="form-control" placeholder="ex: 3" value="3"/>
           </div>
           <div class="input-group">
-            <span class="input-group-addon">sumset fold number (h)</span>
-            <input id="h" class="form-control" placeholder="ex: 2 or [1,3]" value="[1,3]"/>
+            <span class="input-group-addon">?-Fold (H)</span>
+            <input id="H" class="form-control" placeholder="ex: 2 or [1,3]" value="[1,3]"/>
           </div>
           <br>
           <div class="input-group">
@@ -127,7 +128,7 @@
           <br>
           <button id="calc" class="btn btn-primary btn-block" onclick="test()">Test</button>
         </div>
-        <div class="col-sm-6">
+        <div class="col-sm-8">
           <textarea id="result"></textarea>
         </div>
       </div>
@@ -136,39 +137,62 @@
 
     <script>
       function test() {
-        const N = Number(document.getElementById('N').value);
-        let G = JSON.parse('[' + document.getElementById('G').value.replaceAll('x',',') + ']');
-        let m = Number(document.getElementById('m').value);
-        let H = JSON.parse(document.getElementById('h').value);
+        try {
+          const G = JSON.parse('[' + document.getElementById('G').value.replaceAll('x',',') + ']');
+          const m = Number(document.getElementById('m').value);
+          const H = JSON.parse(document.getElementById('H').value);
 
-        let sumset_function = "hfold_" + (H_type(H)=='list' ? 'interval_' : '') + 'sumset';
+          const N = Number(document.getElementById('N').value);
 
-        let group = new Group(G);
-        let SetClass = group.SetClass.name;
-        let a = group.each_set_exact(m).next().value;
-        let contents = a.as_vec();
+          let sumset_function = "hfold_" + (H_type(H)=='list' ? 'interval_' : '') + 'sumset';
 
-        let str = "new " + SetClass + "(" + JSON.stringify(contents) + ")." + sumset_function + "("+H+","+JSON.stringify(G)+")";
+          let group = new Group(G);
+          const n = group.n;
+          let SetClass = group.SetClass.name;
+          let a = group.each_set_exact(m).next().value;
+          let contents = a.as_vec();
 
-        document.getElementById('result').innerHTML = "";
+          let str = "new " + SetClass + "(" + JSON.stringify(contents) + ")." + sumset_function + "("+H+","+JSON.stringify(G)+")";
 
-        let computer = new Computer('../AddComb.js');
-        computer.start({
-          purpose: 'timed_eval',
-          info: {
-            N:N,
-            str:str
-          },
-          oncomplete: function(response) {
-            let total = response.data.res.dt;
-            document.getElementById('result').innerHTML = "Completed " + N + " trials\nTotal Time: " + total + " ms\nPer trial: " + (total/N) + " ms";
-            console.log(response.data)
-          },
-          onerror: function (response) {
-            document.getElementById('result').innerHTML = response.data.error.stack;
-            console.log(response.data.error.stack);
-          }
-        });
+          document.getElementById('result').innerHTML = "";
+
+          let computer = new Computer('../AddComb.js');
+          computer.start({
+            purpose: 'timed_eval',
+            info: {N:N, str:str},
+            oncomplete: function(response) {
+              let total = response.data.res.dt;
+              let result = document.getElementById('result');
+              result.innerHTML = "Completed " + N + " trials\n";
+              result.innerHTML += "Total Time: " + total + " ms\n";
+              result.innerHTML += "Per trial: dt=" + (total/N) + " ms\n\n";
+              result.innerHTML += "Number of subsets of size m is M = " + choose(n,m) + "\n";
+              let T = choose(n,m)*(total/N);
+              let round = 1000;
+              result.innerHTML += "M*dt = " + Math.round(T * round, 2)/round + "\t\tms\n";
+              result.innerHTML += "     = " + Math.round(T/1000 * round, 2)/round + "\t\tsec\n";
+              result.innerHTML += "     = " + Math.round(T/(60 * 1000) * round, 2)/round + "\t\tmin\n";
+              result.innerHTML += "     = " + Math.round(T/(60 * 60 * 1000) * round, 2)/round + "\t\thour\n";
+              result.innerHTML += "     = " + Math.round(T/(24 * 60 * 60 * 1000) * round, 2)/round + "\t\tday\n";
+              result.innerHTML += "     = " + Math.round(T/(7 * 24 * 60 * 60 * 1000) * round, 2)/round + "\t\tweek\n";
+              result.innerHTML += "     = " + Math.round(T/(30 * 24 * 60 * 60 * 1000) * round, 2)/round + "\t\tmonth\n";
+              result.innerHTML += "     = " + Math.round(T/(365.25 * 24 * 60 * 60 * 1000) * round, 2)/round + "\t\tyear\n";
+              result.innerHTML += "     = " + Math.round(T/(10 * 365.25 * 24 * 60 * 60 * 1000) * round, 2)/round + "\t\tdecade\n";
+              result.innerHTML += "     = " + Math.round(T/(10 * 10 * 365.25 * 24 * 60 * 60 * 1000) * round, 2)/round + "\t\tcentury\n";
+              result.innerHTML += "     = " + Math.round(T/(10 * 10 * 10 * 365.25 * 24 * 60 * 60 * 1000) * round, 2)/round + "\t\tmillennia\n";
+              result.innerHTML += "     = " + Math.round(T/(4.54*10**6 * 10 * 10 * 10 * 365.25 * 24 * 60 * 60 * 1000) * round, 2)/round + "\t\tage of the earth\n";
+              result.innerHTML += "     = " + Math.round(T/(3.04 * 4.54*10**6 * 10 * 10 * 10 * 365.25 * 24 * 60 * 60 * 1000) * round, 2)/round + "\t\tage of the universe\n";
+              console.log(response.data)
+            },
+            onerror: function (response) {
+              document.getElementById('result').innerHTML = response.data.error.stack;
+              console.log(response.data.error.stack);
+            }
+          });
+        } catch (e) {
+          console.log(e.stack);
+          document.getElementById('result').innerHTML = e.stack;
+        }
       }
     </script>
 
