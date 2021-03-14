@@ -1355,7 +1355,7 @@ class Group {
     }
     if (verbose) {
       this.verbose_writer.r_write("Set with greatest sumset: A=" + greatest_set.to_string());
-      this.verbose_writer.r_write("(sumset is:) " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + "A=" + greatest_set[sumset_function](H.set, this.G).to_string());
+      this.verbose_writer.r_write("(sumset is:) " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + "A=" + greatest_set[sumset_function](H, this.G).to_string());
       this.verbose_writer.a_write(curr_greatest);
     }
     return curr_greatest;
