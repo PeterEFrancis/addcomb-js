@@ -19,7 +19,7 @@ const BIT_SIZE = 31;
 const B = 2 ** BIT_SIZE - 1;
 
 
-
+// errors
 
 function unimplemented() {
   throw new Error('This has not been implemented yet.')
@@ -32,6 +32,12 @@ function unreachable() {
 function stop() {
   throw new Error('This was intentional.')
 }
+
+function bad_bounds() {
+  throw new Error("supplied bounds are not possible");
+}
+
+
 
 
 
@@ -1534,24 +1540,36 @@ class Group {
       h = args.H;
     }
 
-    for (let m = this.n - 1; m >= 1; m--) {
+    let lower_bound = args.lower_bound || 1;
+    let upper_bound = args.upper_bound || this.n - 1;
+
+    if (upper_bound < lower_bound) bad_bounds();
+
+    for (let m = upper_bound; m >= lower_bound; m--) {
       let expected = expected_function(m,h,s);
-      let found = false;
       for (let a of this.each_set_exact(m)) {
         if (a[sumset_function](args.H, this.G).size() == expected) {
-          if (args.verbose) {
-            this.verbose_writer.r_write("for m=" + m + ", found a=" + a.to_string());
-            this.verbose_writer.ae_write(m);
+          if (args.verbose) this.verbose_writer.r_write("for m=" + m + ", found A=" + a.to_string());
+          if (args.upper_bound && (args.upper_bound == m)) {
+            // supplied upper bound and didn't disprove the existence of any larger sidon sets, we can't be sure of equality
+            if (args.verbose) this.verbose_writer.ag_write(m);
+          } else {
+            if (args.verbose) this.verbose_writer.ae_write(m);
           }
           return m;
         }
       }
+      if (args.verbose) this.verbose_writer.r_write("for m=" + m + ", no sidon sets (sumset size " + expected + ") found");
+
     }
-    if (args.verbose) {
-      this.verbose_writer.r_write("Found no sets of the required size");
-      this.verbose_writer.r_write("... = 0");
+
+    if (args.verbose) this.verbose_writer.r_write("Found no sets of the required size");
+    if (lower_bound == 1) {
+      this.verbose_writer.ae_write(lower_bound - 1);
+    } else {
+      this.verbose_writer.al_write(lower_bound - 1);
     }
-    return 0;
+    return lower_bound - 1;
 
   }
   // chapter d
@@ -1588,26 +1606,55 @@ class Group {
 
     if (args.verbose) this.verbose_writer.c_write("chi" + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "(" + this.to_string() + ", " + H_to_string(args.H) + ")");
 
-    for (let m = 1; m < this.n; m++) {
+    let once_found = false;
+
+    let lower_bound = args.lower_bound || 1;
+    let upper_bound = args.upper_bound || this.n - 1;
+
+    if (upper_bound < lower_bound) bad_bounds();
+
+    for (let m = lower_bound; m <= upper_bound; m++) {
       let found = false;
       for (let a of this.each_set_exact(m)) {
         if (!a[sumset_function](args.H, this.n).is_full(this.n)) {
           if (args.verbose) {
             this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which doesn't give a full sumset");
-            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "A=" + a[sumset_function](args.H, this.G).to_string());
+            this.verbose_writer.r_write("(gives:) " + H_to_string(args.H) + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "A=" + a[sumset_function](args.H, this.G).to_string());
           }
+          once_found = true;
           found = true;
           break;
         }
       }
+
       if (!found) {
         if (args.verbose) {
           this.verbose_writer.r_write("Every " + (args.restricted ? "restricted" : "") + (args.signed ? "signed" : "") + H_to_string(args.H) + "-fold sumset of a subset of size " + m + " is full");
-          this.verbose_writer.ae_write(m);
+          if (args.lower_bound && !once_found) {
+            // supplied lower bound and never found, we can't be sure of equality
+            this.verbose_writer.al_write(m);
+          } else {
+            this.verbose_writer.ae_write(m);
+          }
         }
         return m;
       }
+
     }
+
+    if (args.verbose) {
+      if (args.lower_bound && !once_found) {
+        // supplied lower bound and never found, we can't be sure of equality
+        this.verbose_writer.al_write(this.n - 1);
+      } else if (args.upper_bound) {
+        this.verbose_writer.ag_write(args.upper_bound);
+      } else {
+        this.verbose_writer.ae_write(this.n - 1);
+      }
+    }
+    return upper_bound;
+
+
     unreachable();
   }
   // cahpter f
@@ -1649,14 +1696,19 @@ class Group {
       }
     }
 
-    for (let m = (args.upper_bound || this.n); m >= 1; m--) {
+    let lower_bound = args.lower_bound || 1;
+    let upper_bound = args.upper_bound || this.n;
+
+    if (upper_bound < lower_bound) bad_bounds();
+
+    for (let m = upper_bound; m >= lower_bound; m--) {
       for (let a of this.each_set_exact_no_zero(m)) {
         if (a[sumset_function](args.H, this.G).zero_free(this.G)) {
           if (args.verbose) {
-            this.verbose_writer.r_write("Found A=" + a.to_string() + " which gives a zero-free sumset");
+            this.verbose_writer.r_write("For m=" + m + " found A=" + a.to_string() + " which gives a zero-free sumset");
             this.verbose_writer.r_write("(gives:) " + H_to_string(args.H) + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "A=" + a[sumset_function](args.H, this.G).to_string());
             if (args.upper_bound && (args.upper_bound == m)) {
-              // supplied upper bound and didn't disprove the existenc of any larger zero free sets, we can't be sure of equality
+              // supplied upper bound and didn't disprove the existence of any larger zero free sets, we can't be sure of equality
               this.verbose_writer.ag_write(m);
             } else {
               this.verbose_writer.ae_write(m);
@@ -1670,10 +1722,10 @@ class Group {
       }
     }
     if (args.verbose) {
-      this.verbose_writer.r_write("Found no sets with give zero-free sumsets");
-      this.verbose_writer.ae_write(0);
+      this.verbose_writer.al_write(lower_bound - 1);
     }
-    return 0;
+    return lower_bound - 1;
+
   }
   // chapter g
   mu(args) {
@@ -1690,8 +1742,15 @@ class Group {
       if (args.verbose) this.verbose_writer.ae_write(0);
       return 0;
     }
+
     let once_found = false;
-    for (let m = (args.lower_bound || 1); m < this.n; m++) {
+
+    let upper_bound = args.upper_bound || this.n - 1;
+    let lower_bound = args.lower_bound || 1;
+
+    if (upper_bound < lower_bound) bad_bounds();
+
+    for (let m = lower_bound; m <= upper_bound; m++) {
       let found = false;
       for (let a of this[args.restricted && [k,l]==[2,1] ? 'each_set_exact_no_zero' : 'each_set_exact'](m)) { // if mu is restricted, then 0 cannot be in the subset
         let k_a = a[sumset_function](k, this.G);
@@ -1712,23 +1771,26 @@ class Group {
           this.verbose_writer.r_write("For m=" + m + ", no sum-free sets were found");
           if (args.lower_bound && !once_found) {
             // supplied lower bound and never found, we can't be sure of equality
-            this.verbose_writer.al_write((m - 1));
+            this.verbose_writer.al_write(m - 1);
           } else {
-            this.verbose_writer.ae_write((m - 1));
+            this.verbose_writer.ae_write(m - 1);
           }
         }
         return m - 1;
       }
     }
+
     if (args.verbose) {
       if (args.lower_bound && !once_found) {
         // supplied lower bound and never found, we can't be sure of equality
         this.verbose_writer.al_write(this.n - 1);
+      } else if (args.upper_bound) {
+        this.verbose_writer.ag_write(args.upper_bound);
       } else {
         this.verbose_writer.ae_write(this.n - 1);
       }
     }
-    return this.n - 1;
+    return upper_bound;
   }
 
 }

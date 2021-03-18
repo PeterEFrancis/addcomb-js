@@ -205,7 +205,12 @@
       <div class="row">
         <div class="col-md-12 text-center">
           <h1>Notebook</h1>
-          <p class="text-center">This notebook is for direct use of the functions provided in AddComb.js. For verbose printing of functions, use the variable <code>verbose</code>. The <code>print()</code> function can be used to print to the cell output.</p>
+          <p class="text-center">
+            This notebook is for direct use of the functions provided in AddComb.js.
+            For verbose printing of functions, use the variable <code>verbose</code>.
+            The <code>print()</code> function can be used to print to the cell output.
+            <button onclick="load_default()" class="btn btn-danger btn-xs">Load Default</button>
+          </p>
         </div>
       </div>
 
@@ -282,7 +287,7 @@
 
       const DEFAULT = [null,
         {
-          code_content: "let g = new Group([3,3], verbose);\ng.mu(true, false, new Set([1, 2]), true);",
+          code_content: "let g = new Group([3,3], verbose);\ng.mu({\n   restricted: true,\n       signed: false,\n            H: new Set([1, 2]),\n      verbose: true,\n  lower_bound: 3,\n  upper_bound: 9\n});",
           tag: " ",
           output_content: "",
           state: "clear"
@@ -300,6 +305,11 @@
           state: "clear"
         }
       ];
+
+      function load_default() {
+        contents = DEFAULT;
+        build_page_from_contents();
+      }
 
 
       var contents = [null];
