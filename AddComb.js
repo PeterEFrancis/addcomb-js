@@ -1853,7 +1853,6 @@ var comp_purposes = {
     args.restricted = info.restricted;
     args.signed = info.signed;
     args.verbose = info.verbose;
-    console.log(args);
     let num = group[info.func](args);
     return {
       num: num,
