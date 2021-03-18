@@ -514,8 +514,16 @@ class VerboseWriter {
     this.write("    " + s);
   }
 
-  a_write(s) {
+  ae_write(s) {
     this.write("... = " + s);
+  }
+
+  al_write(s) {
+    this.write("... ≤ " + s);
+  }
+
+  ag_write(s) {
+    this.write("... ≥ " + s);
   }
 
   write(s) {
@@ -1250,14 +1258,14 @@ function parse_args(func, arg) {
   let e_args;
 
   if (func === "nu" || func === "rho") {
-    e_args = [
-      Number(arg.slice(0,arg.indexOf(','))),
-      H_eval(arg.slice(arg.indexOf(',') + 1))
-    ];
+    e_args = {
+      m:Number(arg.slice(0,arg.indexOf(','))),
+      H:H_eval(arg.slice(arg.indexOf(',') + 1))
+    };
   } else if (func == "mu") {
-    e_args = [new Set(arg.split(',').map(x => Number(x)))];
+    e_args = {H:new Set(arg.split(',').map(x => Number(x)))};
   } else {
-    e_args = [H_eval(arg)];
+    e_args = {H:H_eval(arg)};
   }
 
   return e_args;
@@ -1329,23 +1337,23 @@ class Group {
 
 
   // chapter a
-  nu(restricted, signed, m, H, verbose) {
-    if (H_type(H) == 'literal') unimplemented();
-    let interval = H_type(H) == "interval";
-    let opt_string = this.get_opt_string(restricted, signed, interval);
+  nu(args) {
+    if (H_type(args.H) == 'literal') unimplemented();
+    let interval = H_type(args.H) == "interval";
+    let opt_string = this.get_opt_string(args.restricted, args.signed, args.interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
 
-    if (verbose) this.verbose_writer.c_write("nu" + VerboseWriter.disp_opt_string(restricted, signed) + "(" + this.to_string() + ", " + m + ", " + H_to_string(H) + ")");
+    if (args.verbose) this.verbose_writer.c_write("nu" + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "(" + this.to_string() + ", " + args.m + ", " + H_to_string(args.H) + ")");
 
     let greatest_set = this.SetClass.empty_set();
     let curr_greatest = 0;
-    for (let a of this.each_set_exact(m)) {
-      let size = a[sumset_function](H, this.G).size();
+    for (let a of this.each_set_exact(args.m)) {
+      let size = a[sumset_function](args.H, this.G).size();
       if (size > curr_greatest) {
         if (size == this.n) {
-          if (verbose) {
+          if (args.verbose) {
             this.verbose_writer.r_write("Found spanning set: " + a.to_string());
-            this.verbose_writer.a_write(this.n);
+            this.verbose_writer.ae_write(this.n);
           }
           return this.n;
         }
@@ -1353,31 +1361,31 @@ class Group {
         greatest_set = a;
       }
     }
-    if (verbose) {
+    if (args.verbose) {
       this.verbose_writer.r_write("Set with greatest sumset: A=" + greatest_set.to_string());
-      this.verbose_writer.r_write("(sumset is:) " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + "A=" + greatest_set[sumset_function](H, this.G).to_string());
-      this.verbose_writer.a_write(curr_greatest);
+      this.verbose_writer.r_write("(sumset is:) " + H_to_string(args.H) + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "A=" + greatest_set[sumset_function](args.H, this.G).to_string());
+      this.verbose_writer.ae_write(curr_greatest);
     }
     return curr_greatest;
   }
   // chapter b
-  phi(restricted, signed, H, verbose) {
-    if (H_type(H) == 'literal') unimplemented();
-    let interval = H_type(H) == "interval";
+  phi(args) {
+    if (H_type(args.H) == 'literal') unimplemented();
+    let interval = H_type(args.H) == "interval";
 
-    let opt_string = this.get_opt_string(restricted, signed, interval);
+    let opt_string = this.get_opt_string(args.restricted, args.signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
 
-    if (verbose) this.verbose_writer.c_write("phi" + VerboseWriter.disp_opt_string(restricted, signed) + "(" + this.to_string() + ", " + H_to_string(H) + ")");
+    if (args.verbose) this.verbose_writer.c_write("phi" + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "(" + this.to_string() + ", " + H_to_string(args.H) + ")");
 
     if (interval) {
-      if (signed) {
+      if (args.signed) {
         for (let m = 1; m < this.n; m++) {
           for (let a of this.each_set_exact(m)) {
-            if (a[sumset_function](H, this.G).is_full(this.G)) {
-              if (verbose) {
+            if (a[sumset_function](args.H, this.G).is_full(this.G)) {
+              if (args.verbose) {
                 this.verbose_writer.r_write("Found spanning set: A=" + a.to_string());
-                this.verbose_writer.a_write(m);
+                this.verbose_writer.ae_write(m);
               }
               return m;
             }
@@ -1390,26 +1398,26 @@ class Group {
         // better lower bounds for cyclic groups
         if (this.groupType == 'cyclic') {
 
-          if (!restricted) { // Proposition B.10
-            if (H[0] == 0) {
-              let s = H[1];
+          if (!args.restricted) { // Proposition B.10
+            if (args.H[0] == 0) {
+              let s = args.H[1];
               lower_bound = Math.max(1, 1 + Math.ceil(Math.pow(factorial(s) * this.n, (1 / s))) - s);
-              if (verbose) this.verbose_writer.r_write("(Proposition B.10) Using lower bound: " + lower_bound);
+              if (args.verbose) this.verbose_writer.r_write("(Proposition B.10) Using lower bound: " + lower_bound);
             }
           } else { // Proposition B.73
-            if (H[0] == 0 && H[1] == 2) {
+            if (args.H[0] == 0 && args.H[1] == 2) {
               lower_bound = Math.max(1, Math.ceil((Math.sqrt(8 * this.n - 7) - 1) / 2));
-              if (verbose) this.verbose_writer.r_write("(Proposition B.73) Using lower bound: " + lower_bound);
+              if (args.verbose) this.verbose_writer.r_write("(Proposition B.73) Using lower bound: " + lower_bound);
             }
           }
         }
 
         for (let m = lower_bound; m <= this.n; m++) {
           for (let a of this.each_set_exact(m)) {
-            if (a[sumset_function](H, this.G).is_full(this.n)) {
-              if (verbose) {
+            if (a[sumset_function](args.H, this.G).is_full(this.n)) {
+              if (args.verbose) {
                 this.verbose_writer.r_write("Found spanning set: " + a.to_string());
-                this.verbose_writer.a_write(m);
+                this.verbose_writer.ae_write(m);
               }
               return m;
             }
@@ -1418,29 +1426,29 @@ class Group {
         unreachable();
       }
     } else {
-      if (restricted) {
-        if (!signed) {
+      if (args.restricted) {
+        if (!args.signed) {
           if (this.n == 1) {
-            if (verbose) this.verbose_writer.r_write("... = 1");
+            if (args.verbose) this.verbose_writer.r_write("... = 1");
             return 1;
           }
-          if (H == 1) {
-            if (verbose) this.verbose_writer.a_write(this.n);
+          if (args.H == 1) {
+            if (args.verbose) this.verbose_writer.ae_write(this.n);
             return n;
           }
         }
 
-        if (this.n <= H) {
-          if (verbose) this.verbose_writer.a_write(this.n);
+        if (this.n <= args.H) {
+          if (args.verbose) this.verbose_writer.ae_write(this.n);
           return this.n;
         }
         for (let m = 2; m <= this.n; m++) {
           for (let a of this.each_set_exact(m)) {
-            let sumset = a[sumset_function](H, this.G);
+            let sumset = a[sumset_function](args.H, this.G);
             if (sumset.is_full(this.n)) {
-              if (verbose) {
+              if (args.verbose) {
                 this.verbose_writer.r_write("Found spanning set: " + a.to_string());
-                this.verbose_writer.a_write(m);
+                this.verbose_writer.ae_write(m);
               }
               return m;
             }
@@ -1448,18 +1456,18 @@ class Group {
         }
         unreachable();
       } else {
-        if (signed) {
+        if (args.signed) {
           if (this.n == 1) {
-            if (verbose) this.verbose_writer.r_write("... = 1");
+            if (args.verbose) this.verbose_writer.r_write("... = 1");
             return 1;
           }
           for (let m = 2; m <= this.n; m++) {
             for (let a of this.each_set_exact(m)) {
 
-              if (a[sumset_function](H, this.G).is_full(this.n)) {
+              if (a[sumset_function](args.H, this.G).is_full(this.n)) {
                 if (verbose) {
                   this.verbose_writer.r_write("Found spanning set: " + a.to_string());
-                  this.verbose_writer.a_write(m);
+                  this.verbose_writer.ae_write(m);
                 }
                 return m;
               }
@@ -1471,14 +1479,14 @@ class Group {
           if (this.n == 1) {
             return 1;
           }
-          if (H == 1) {
+          if (args.H == 1) {
               return this.n;
           }
-          if (verbose) this.verbose_writer.r_write("Using relation between phi and phi_interval to compute value");
+          if (args.verbose) this.verbose_writer.r_write("Using relation between phi and phi_interval to compute value");
 
-          let res = 1 + this.phi(false, false, [0, H], false);
+          let res = 1 + this.phi(false, false, [0, args.H], false);
 
-          if (verbose) this.verbose_writer.a_write(res);
+          if (args.verbose) this.verbose_writer.ae_write(res);
 
           return res;
         }
@@ -1487,13 +1495,13 @@ class Group {
 
   }
   // chapter c
-  sigma(restricted, signed, H, verbose) {
-    if (H_type(H) == 'literal') unimplemented();
-    let interval = H_type(H) == "interval";
-    let opt_string = this.get_opt_string(restricted, signed, interval);
+  sigma(args) {
+    if (H_type(args.H) == 'literal') unimplemented();
+    let interval = H_type(args.H) == "interval";
+    let opt_string = this.get_opt_string(args.restricted, args.signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
 
-    if (verbose) this.verbose_writer.c_write("sigma" + VerboseWriter.disp_opt_string(restricted, signed) + "(" + this.to_string() + ", " + H_to_string(H) + ")");
+    if (args.verbose) this.verbose_writer.c_write("sigma" + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "(" + this.to_string() + ", " + H_to_string(args.H) + ")");
 
     let expected_function = function(m, h, s) {
       if (opt_string == '') {
@@ -1518,28 +1526,28 @@ class Group {
     let h = null;
     let s = null;
     if (interval) {
-      if (H[0] != 0) {
+      if (args.H[0] != 0) {
         unimplemented();
       }
-      s = H[1];
+      s = args.H[1];
     } else {
-      h = H;
+      h = args.H;
     }
 
     for (let m = this.n - 1; m >= 1; m--) {
       let expected = expected_function(m,h,s);
       let found = false;
       for (let a of this.each_set_exact(m)) {
-        if (a[sumset_function](H, this.G).size() == expected) {
-          if (verbose) {
+        if (a[sumset_function](args.H, this.G).size() == expected) {
+          if (args.verbose) {
             this.verbose_writer.r_write("for m=" + m + ", found a=" + a.to_string());
-            this.verbose_writer.a_write(m);
+            this.verbose_writer.ae_write(m);
           }
           return m;
         }
       }
     }
-    if (verbose) {
+    if (args.verbose) {
       this.verbose_writer.r_write("Found no sets of the required size");
       this.verbose_writer.r_write("... = 0");
     }
@@ -1547,55 +1555,55 @@ class Group {
 
   }
   // chapter d
-  rho(restricted, signed, m, H, verbose) {
-    if (H_type(H) == 'literal') unimplemented();
-    let interval = H_type(H) == "interval";
-    let opt_string = this.get_opt_string(restricted, signed, interval);
+  rho(args) {
+    if (H_type(args.H) == 'literal') unimplemented();
+    let interval = H_type(args.H) == "interval";
+    let opt_string = this.get_opt_string(args.restricted, args.signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
 
-    if (verbose) this.verbose_writer.c_write("rho" + VerboseWriter.disp_opt_string(restricted, signed) + "(" + this.to_string() + ", " + m + ", " + H_to_string(H) + ")");
+    if (args.verbose) this.verbose_writer.c_write("rho" + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "(" + this.to_string() + ", " + args.m + ", " + H_to_string(args.H) + ")");
 
     let smallest_set = this.SetClass.empty_set();
     let curr_smallest = this.n;
-    for (let a of this.each_set_exact(m)) {
-      let size = a[sumset_function](H, this.G).size();
+    for (let a of this.each_set_exact(args.m)) {
+      let size = a[sumset_function](args.H, this.G).size();
         if (size < curr_smallest) {
           curr_smallest = size;
           smallest_set = a;
         }
     }
-    if (verbose) {
+    if (args.verbose) {
       this.verbose_writer.r_write("Set with smallest sumset: A=" +  smallest_set.to_string());
-      this.verbose_writer.r_write("(sumset is:) " + H_to_string(H) + "A=" + smallest_set[sumset_function](H, this.G).to_string());
-      this.verbose_writer.a_write(curr_smallest);
+      this.verbose_writer.r_write("(sumset is:) " + H_to_string(args.H) + "A=" + smallest_set[sumset_function](args.H, this.G).to_string());
+      this.verbose_writer.ae_write(curr_smallest);
     }
     return curr_smallest;
   }
   // chapter e
-  chi(restricted, signed, H, verbose) {
-    if (H_type(H) == 'literal') unimplemented();
-    let interval = H_type(H) == "interval";
-    let opt_string = this.get_opt_string(restricted, signed, interval);
+  chi(args) {
+    if (H_type(args.H) == 'literal') unimplemented();
+    let interval = H_type(args.H) == "interval";
+    let opt_string = this.get_opt_string(args.restricted, args.signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
 
-    if (verbose) this.verbose_writer.c_write("chi" + VerboseWriter.disp_opt_string(restricted, signed) + "(" + this.to_string() + ", " + H_to_string(H) + ")");
+    if (args.verbose) this.verbose_writer.c_write("chi" + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "(" + this.to_string() + ", " + H_to_string(args.H) + ")");
 
     for (let m = 1; m < this.n; m++) {
       let found = false;
       for (let a of this.each_set_exact(m)) {
-        if (!a[sumset_function](H,this.n).is_full(this.n)) {
-          if (verbose) {
+        if (!a[sumset_function](args.H, this.n).is_full(this.n)) {
+          if (args.verbose) {
             this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which doesn't give a full sumset");
-            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + "A=" + a[sumset_function](H, this.G).to_string());
+            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "A=" + a[sumset_function](args.H, this.G).to_string());
           }
           found = true;
           break;
         }
       }
       if (!found) {
-        if (verbose) {
-          this.verbose_writer.r_write("Every " + (restricted ? "restricted" : "") + (signed ? "signed" : "") + H_to_string(H) + "-fold sumset of a subset of size " + m + " is full");
-          this.verbose_writer.a_write(m);
+        if (args.verbose) {
+          this.verbose_writer.r_write("Every " + (args.restricted ? "restricted" : "") + (args.signed ? "signed" : "") + H_to_string(args.H) + "-fold sumset of a subset of size " + m + " is full");
+          this.verbose_writer.ae_write(m);
         }
         return m;
       }
@@ -1603,15 +1611,16 @@ class Group {
     unreachable();
   }
   // cahpter f
-  tau(restricted, signed, H, verbose) {
-    if (H_type(H) == 'literal') unimplemented();
-    let interval = H_type(H) == "interval";
-    let opt_string = this.get_opt_string(restricted, signed, interval);
+  tau(args) {
+    if (H_type(args.H) == 'literal') unimplemented();
+    let interval = H_type(args.H) == "interval";
+    let opt_string = this.get_opt_string(args.restricted, args.signed, interval);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
 
-    if (verbose) this.verbose_writer.c_write("tau" + VerboseWriter.disp_opt_string(restricted, signed) + "(" + this.to_string() + ", " + H_to_string(H) + ")");
+    if (args.verbose) this.verbose_writer.c_write("tau" + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "(" + this.to_string() + ", " + H_to_string(args.H) + ")");
 
-    if (restricted && !signed && !interval) {
+    if (args.restricted && !args.signed && !args.interval) {
+      let h = args.H;
       // Theorem F.88
       if (this.groupType == 'cyclic') {
         if (this.n >= 12 && this.n % 2 == 0 && (3 <= h) && (h <= this.n - 1) && (h % 2 == 1)) {
@@ -1627,76 +1636,98 @@ class Group {
           } else { // h = n - 1 (guaranteed)
             val = this.n - 1
           }
-          if (verbose) this.verbose_writer.a_write(val);
+          if (args.verbose) this.verbose_writer.ae_write(val);
           return val;
         }
       }
       if (this.n == 1) {
-        if (verbose) this.verbose_writer.a_write(1);
+        if (args.verbose) {
+          this.verbose_writer.r_write("Using Theorem F.88");
+          this.verbose_writer.ae_write(1);
+        }
         return 1;
       }
     }
 
-    for (let m = this.n; m >= 1; m--) {
+    for (let m = (args.upper_bound || this.n); m >= 1; m--) {
       for (let a of this.each_set_exact_no_zero(m)) {
-        if (a[sumset_function](H,this.G).zero_free(this.G)) {
-          if (verbose) {
+        if (a[sumset_function](args.H, this.G).zero_free(this.G)) {
+          if (args.verbose) {
             this.verbose_writer.r_write("Found A=" + a.to_string() + " which gives a zero-free sumset");
-            this.verbose_writer.r_write("(gives:) " + H_to_string(H) + VerboseWriter.disp_opt_string(restricted, signed) + "A=" + a[sumset_function](H, this.G).to_string());
-            this.verbose_writer.a_write(m);
+            this.verbose_writer.r_write("(gives:) " + H_to_string(args.H) + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "A=" + a[sumset_function](args.H, this.G).to_string());
+            if (args.upper_bound && (args.upper_bound == m)) {
+              // supplied upper bound and didn't disprove the existenc of any larger zero free sets, we can't be sure of equality
+              this.verbose_writer.ag_write(m);
+            } else {
+              this.verbose_writer.ae_write(m);
+            }
           }
           return m;
         }
       }
-      if (verbose) {
+      if (args.verbose) {
         this.verbose_writer.r_write("No subsets of size m=" + m + " give a zero-free sumset");
       }
     }
-    if (verbose) {
+    if (args.verbose) {
       this.verbose_writer.r_write("Found no sets with give zero-free sumsets");
-      this.verbose_writer.a_write(0);
+      this.verbose_writer.ae_write(0);
     }
     return 0;
   }
   // chapter g
-  mu(restricted, signed, H, verbose) {
-    if (H_type(H) != "literal") unimplemented();
-    let opt_string = this.get_opt_string(restricted, signed);
+  mu(args) {
+    if (H_type(args.H) != "literal") unimplemented();
+    let opt_string = this.get_opt_string(args.restricted, args.signed);
     let sumset_function = 'hfold_' + opt_string + 'sumset';
 
-    if (verbose) this.verbose_writer.c_write("mu" + VerboseWriter.disp_opt_string(restricted, signed) + "(" + this.to_string() + ", " + H_to_string(H) + ")");
+    if (args.verbose) this.verbose_writer.c_write("mu" + VerboseWriter.disp_opt_string(args.restricted, args.signed) + "(" + this.to_string() + ", " + H_to_string(args.H) + ")");
 
-    let k = Math.max(...H);
-    let l = Math.min(...H);
+    let k = Math.max(...args.H);
+    let l = Math.min(...args.H);
 
     if (k == l) {
-      if (verbose) this.verbose_writer.a_write(0);
+      if (args.verbose) this.verbose_writer.ae_write(0);
       return 0;
     }
-    for (let m = 1; m < this.n; m++) {
+    let once_found = false;
+    for (let m = (args.lower_bound || 1); m < this.n; m++) {
       let found = false;
-      for (let a of this[restricted && [k,l]==[2,1] ? 'each_set_exact_no_zero' : 'each_set_exact'](m)) { // if mu is restricted, then 0 cannot be in the subset
+      for (let a of this[args.restricted && [k,l]==[2,1] ? 'each_set_exact_no_zero' : 'each_set_exact'](m)) { // if mu is restricted, then 0 cannot be in the subset
         let k_a = a[sumset_function](k, this.G);
         let l_a = a[sumset_function](l, this.G);
         k_a.intersect(l_a);
         if (k_a.is_empty()) {
-          if (verbose){
-            this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which is sum-free");
+          if (args.verbose){
+            this.verbose_writer.r_write("For m=" + m + ", found A=" + a.to_string() + ", which is (" + k + ", " + l + ")-sum-free");
             this.verbose_writer.r_write("(kA = " + a[sumset_function](k, this.G).to_string() + ", lA = " + l_a.to_string() + ")");
           }
           found = true;
+          once_found = true;
           break;
         }
       }
       if (!found) {
-        if (verbose) {
+        if (args.verbose) {
           this.verbose_writer.r_write("For m=" + m + ", no sum-free sets were found");
-          this.verbose_writer.a_write((m - 1));
+          if (args.lower_bound && !once_found) {
+            // supplied lower bound and never found, we can't be sure of equality
+            this.verbose_writer.al_write((m - 1));
+          } else {
+            this.verbose_writer.ae_write((m - 1));
+          }
         }
         return m - 1;
       }
     }
-    if (verbose) this.verbose_writer.a_write((this.n - 1));
+    if (args.verbose) {
+      if (args.lower_bound && !once_found) {
+        // supplied lower bound and never found, we can't be sure of equality
+        this.verbose_writer.al_write(this.n - 1);
+      } else {
+        this.verbose_writer.ae_write(this.n - 1);
+      }
+    }
     return this.n - 1;
   }
 
@@ -1791,17 +1822,12 @@ var comp_purposes = {
     };
   },
   "function":function(info) {
-    let func = info.func;
-    let arg = info.arg;
-    let restricted = info.restricted;
-    let signed = info.signed;
     let sizes = info.sizes;
     if (sizes == "") {
       throw new Error('You must define a group');
     } else {
       sizes = sizes.replaceAll('x',',').split(",").map(x => Number(x))
     }
-
     // let verbose_element = {innerHTML:''};
     const self_ = self;
     let verbose_element = {
@@ -1823,9 +1849,12 @@ var comp_purposes = {
       }
     };
     let group = new Group(sizes, info.verbose ? verbose_element : false);
-    let e_args = parse_args(func, arg);
-    let num = group[func](restricted, signed, ...e_args, info.verbose);
-
+    let args = parse_args(info.func, info.arg);
+    args.restricted = info.restricted;
+    args.signed = info.signed;
+    args.verbose = info.verbose;
+    console.log(args);
+    let num = group[info.func](args);
     return {
       num: num,
       verbose_string: verbose_element.innerHTML
