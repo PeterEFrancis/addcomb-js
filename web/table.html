@@ -290,13 +290,14 @@
                 </th>
                 <th id="table-label-top" colspan="11">
                   <span id="table-t-left">
-                    <input id="col-min" class="bound-input" type="number" min="1" max="150" step="1" value="1" oninput='num_only(this)'>
+                    <input id="col-min" class="bound-input" type="number" min="1" max="150" step="1" value="1" oninput='num_only(this)' onchange="this.value=this.value==''?1:this.value">
                   </span>
                   <span class="table-label">
                     c
+                    <input id="col-skip" style="margin-left: 30px;" class="bound-input" type="number" min="1" max="150" step="1" value="1" oninput='num_only(this)' placeholder='skip' onchange="this.value=this.value==''?1:this.value">
                   </span>
                   <span id="table-t-right">
-                    <input id="col-max" class="bound-input" type="number" min="1" max="150" step="1" value="10" oninput='num_only(this)'>
+                    <input id="col-max" class="bound-input" type="number" min="1" max="150" step="1" value="10" oninput='num_only(this)' onchange="this.value=this.value==''?10:this.value">
                   </span>
                 </th>
               </tr>
@@ -306,13 +307,16 @@
                 <th id="table-label-left" rowspan="11">
                   <div id="side-size-fixer">&nbsp;</div>
                   <span class="table-label" id="table-s-top">
-                    <input id="row-min" class="bound-input" type="number" min="1" max="150" step="1" value="1" oninput='num_only(this)'>
+                    <input id="row-min" class="bound-input" type="number" min="1" max="150" step="1" value="1" oninput='num_only(this)' onchange="this.value=this.value==''?1:this.value">
                   </span>
                   <span class="table-label">
                     r
+                    <br>
+                    <br>
+                    <input id="row-skip" class="bound-input" type="number" min="1" max="150" step="1" value="1" oninput='num_only(this)' placeholder='skip' onchange="this.value=this.value==''?1:this.value">
                   </span>
                   <span class="table-label" id="table-s-bottom">
-                    <input id="row-max" class="bound-input" type="number" min="1" max="150" step="1" value="10" oninput='num_only(this)'>
+                    <input id="row-max" class="bound-input" type="number" min="1" max="150" step="1" value="10" oninput='num_only(this)' onchange="this.value=this.value==''?10:this.value">
                   </span>
                 </th>
               </tr>
@@ -338,9 +342,12 @@
       function update_table() {
 
         let row_min = Number(document.getElementById('row-min').value);
+        let row_skip = Number(document.getElementById('row-skip').value);
         let row_max = Number(document.getElementById('row-max').value);
         let col_min = Number(document.getElementById('col-min').value);
+        let col_skip = Number(document.getElementById('col-skip').value);
         let col_max = Number(document.getElementById('col-max').value);
+
 
         if (row_max < row_min || col_max < col_min) {
           error.innerHTML = 'maximum bounds must be greater than or equal to minimum bounds';
@@ -361,20 +368,35 @@
         while (row_headers.children.length > 1) {
           row_headers.removeChild(row_headers.lastChild);
         }
-        row_headers.appendChild(document.createElement('th'));
-        for (let c = col_min; c <= col_max; c++) {
+        let th = document.createElement('th');
+        row_headers.appendChild(th);
+        th.classList.add('tdata');
+        th.onclick = function() {
+          for (let c = col_min; c <= col_max; c += col_skip) {
+            for (let r = row_min; r <= row_max; r += row_skip) {
+              document.getElementById('cell-' + r + '-' + c).click();
+            }
+          }
+        }
+        for (let c = col_min; c <= col_max; c += col_skip) {
           let th = document.createElement('th');
+          th.classList.add('tdata');
           th.setAttribute('scope',"col");
           th.innerHTML = c;
           row_headers.appendChild(th);
+          th.onclick = function() {
+            for (let r = row_min; r <= row_max; r++) {
+              document.getElementById('cell-' + r + '-' + c).click();
+            }
+          }
         }
-        for (let r = row_min; r <= row_max; r++) {
+        for (let r = row_min; r <= row_max; r += row_skip) {
           let tr = document.createElement('tr');
           let th = document.createElement('th');
           th.setAttribute('scope','row');
           th.innerHTML = r;
           tr.appendChild(th);
-          for (let c = col_min; c <= col_max; c++) {
+          for (let c = col_min; c <= col_max; c += col_skip) {
             let td = document.createElement('td');
             td.classList.add('tdata');
             td.setAttribute('id', 'cell-' + r + '-' + c);
@@ -385,6 +407,12 @@
             tr.appendChild(td);
           }
           tbody.appendChild(tr);
+          th.classList.add('tdata');
+          th.onclick = function() {
+            for (let c = col_min; c <= col_max; c += col_skip) {
+              document.getElementById('cell-' + r + '-' + c).click();
+            }
+          }
         }
       }
 
