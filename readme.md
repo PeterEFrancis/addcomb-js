@@ -70,7 +70,9 @@ computer.start({
 ### Chapter Functions
 
 
-To execute chapter functions, you must first create a group object. By convention, the chapter functions usually take the group as an argument, but here, the group is an object and the chapter functions are all methods. If a verbose element is supplied, verbose printing will be allowed. To enable verbose printing, the last argument of a chapter function must be `true`. The verbose printing will be in the developer console during the computation, and once complete, will be added to the `innerHTML` verbose_element (the later must be done manually if using a `Computer` object).
+To execute chapter functions, you must first create a group object. By convention, the chapter functions usually take the group as an argument, but here, the group is an object and the chapter functions are all methods. If a verbose element is supplied, verbose printing will be allowed.
+
+The verbose printing will be in the developer console during the computation, and once complete, will be added to the `innerHTML` verbose_element (the later must be done manually if using a `Computer` object).
 
 ```HTML
 <textarea id='verbose'></textarea>
@@ -79,15 +81,21 @@ To execute chapter functions, you must first create a group object. By conventio
 
   // I want to find mu^(Z_2xZ_15, {1, 2}) with verbose printing
   let group_2_15 = new Group([2,15], verbose_element);
-  let restricted = true;
-  let signed = false;
-  let H = new Set([1,2]);
-  let verbose = true;
-  let result1 = group_2_15.mu(restricted, signed, H, verbose);
+  let result1 = group_2_15.mu({
+    restricted: true,
+    signed: false,
+    H: new Set([1,2]),
+    verbose: true
+  });
 
   // I want to find nu±(Z_29, 5, [0,7]) without verbose printing
   let group_29 = new Group([29], verbose_element);
-  let result2 = group.mu(false, true, [0,7], false);
+  let result2 = group.mu({
+    restricted: false,
+    signed: true,
+    H: [0,7],
+    verbose: false
+  });
 
 </script>
 ```
