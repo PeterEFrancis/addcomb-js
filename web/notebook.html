@@ -430,7 +430,7 @@
               onerror: function (response) {
                 contents[id].state = 'error';
                 contents[id].output_content += response.data.error.stack;
-                console.log(response.data.error.stack);
+                console.log(response.data.error);
                 write_cell_output(id);
                 calculation_queue.error();
               }

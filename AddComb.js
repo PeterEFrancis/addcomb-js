@@ -1048,7 +1048,7 @@ class GeneralSet {
         continue;
       }
       let tmp = this.hfold_signed_sumset(i, G);
-      res = res.add_all(tmp.contents);
+      res.add_all(tmp.contents);
     }
     return res;
   }
