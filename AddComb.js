@@ -968,6 +968,9 @@ class GeneralSet {
     return cl;
   }
   zero_free(sizes) {
+    if (sizes.length == 1) {
+      return !this.contents.includes(0);
+    }
     return !this.has(zeros(sizes.length));
   }
 
