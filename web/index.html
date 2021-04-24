@@ -78,13 +78,13 @@
             <li class="nav-item">
               <a class="nav-link" href="notebook.html">Notebook</a>
             </li>
-            <li class="nav-item">
-              <a class="nav-link" href="time.html">Time Check</a>
-            </li>
           </ul>
           <ul class="nav navbar-nav navbar-right">
             <li class="nav-item">
-              <a href="test.html">Test Cases</a></li>
+              <a class="nav-link" href="time.html">Time Check</a>
+            </li>
+            <li class="nav-item">
+              <a href="test.html">Docs & Tests</a></li>
           </ul>
         </div>
       </div>
@@ -106,7 +106,6 @@
           <button class="btn btn-primary btn-lg" onclick="location.href='sumset.html'" style="margin:15px">Sumset Calculator</button>
           <button class="btn btn-success btn-lg" onclick="location.href='table.html'" style="margin:15px">Table Generator</button>
           <button class="btn btn-warning btn-lg" onclick="location.href='notebook.html'" style="margin:15px">Notebook</button>
-          <button class="btn btn-info btn-lg" onclick="location.href='time.html'" style="margin:15px">Time Check</button>
         </div>
       </div>
     </div>
@@ -118,11 +117,15 @@
           <h2 class="text-center">About</h2>
 
           <p class="text-justify">
-            This website has four additive combinatorics tools: a
-            function calculator (for a large list of the
-            functions listed <a href="function.html#functions_and_notations">here</a>),
-            sumset calculator, table generator, and playground Jupyter-style notebook.
-            Please see below for more information.
+            AddComb.js is a javascript library for additive combinatorics computation. The code can be found on <a href="https://github.com/peterefrancis/AddComb-js" target="_blank">GitHub</a>. The functions provided in the library can be used synchronously, but du to the sometimes long run times, asynchrounous execution is helpful and easy. This website has four additive combinatorics tools:
+            <ul>
+              <li>a <b>function calculator</b> (for a large list of the
+            functions listed <a href="function.html#functions_and_notations">here</a>),</li>
+              <li>a <b>sumset calculator</b> (for computing sumsets of a given set, in a given group),</li>
+              <li>a <b>table generator</b> (for doing multiple computations at once and displaying the results in a grid),</li>
+              <li> and a Jupyter-style <b>notebook</b> playground (for interacting with the AddComb.js code directly).</li>
+            </ul>
+            Since the code runs in the user's browser, there is also a tool for checking your computer's computation speed. The documentation for AddComb.js along with test cases and examples can be found in <a href="test.html">Docs & Tests</a>.
           </p>
 
         <h4>Additive Combinatorics: A Menu of Research Problems</h4>
@@ -169,18 +172,10 @@
         </div>
 
 
-        <h4>About the Program and Programmers</h4>
+        <h4>About the Programmers</h4>
 
         <p>
-          <a href="https://PeterEFrancis.com"><strong>Peter E. Francis</strong></a> and
-          <a href="https://matthewtorrence.com/"><strong>Matthew Torrence</strong></a> are math majors at Gettysburg College and began the
-          construction of this calculator in a research course
-          in 2019. The program is written in Javascript, and runs completely
-          in the browser.
-        </p>
-        <p>The source of this program as well as some examples can be found at <a href=
-          "https://github.com/PeterEFrancis/AddComb-js" target="_blank">https://github.com/PeterEFrancis/AddComb-js</a>.</p>
-        <p>An open source version of this program written in Rust and Python can be found at <a href=
+          I (<a href="https://PeterEFrancis.com"><strong>Peter E. Francis</strong></a>) began developement on this tool as an undergraduate Mathematics Major at Gettysburg College while taking a research course in 2019. I would like to thank <a href="https://matthewtorrence.com/"><strong>Matthew Torrence</strong></a> who developed an open source version of this program written in Rust and Python, which can be found at <a href=
           "https://github.com/Torrencem/addcombq" target="_blank">https://github.com/Torrencem/addcombq</a>.
         </p>
 
