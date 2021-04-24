@@ -289,6 +289,33 @@ function *sign_combinations(pattern) {
   return null;
 }
 
+function *subsets(A, m, zero_free) {
+  let vec = A.as_vec();
+  for (let indices of combinations(range(zero_free && !A.zero_free() ? 1 : 0, A.size()), m)) {
+  	let ret = new A.constructor();
+    ret.add_all(indices.map(x => vec[x]));
+    yield ret;
+  }
+  return null;
+}
+
+function *partitions(num, length, max_val) {
+	if (num <= max_val) {
+    yield [num, ...zeros(length - 1)];
+  }
+  for (
+    let first = Math.min(num - 1, max_val);
+    first > Math.max(0,Math.floor((num - 1)/length));
+    first--
+  ) {
+    for (let p of partitions(num - first, length - 1, first)) {
+      let res = [first, ...p];
+      yield [...res, ...zeros(length - res.length)];
+    }
+  }
+	return null;
+}
+
 class EachSetExact {
   constructor(state, setmask, doneflag) {
     this.state = state;
@@ -607,6 +634,24 @@ class FastSet {
     return !this.has(0);
   }
 
+  is_dissociated(n) {
+    return this.hfold_interval_restricted_signed_sumset([1, this.size()], n).zero_free();
+  }
+  dim(n) {
+    for (let m = 1; m <= this.size(); m++) {
+    	let found = false;
+      for (let subset of subsets(this, m, true)) {
+        if (subset.is_dissociated(n)) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+      	return m - 1;
+      }
+    }
+    return this.size();
+  }
 
   // displays
   as_vec() {
@@ -968,7 +1013,29 @@ class GeneralSet {
     return cl;
   }
   zero_free(sizes) {
+    if (sizes.length == 1) {
+      return !this.contents.includes(0);
+    }
     return !this.has(zeros(sizes.length));
+  }
+
+  is_dissociated(G) {
+    return this.hfold_interval_restricted_signed_sumset([1, this.size()], G).zero_free(G);
+  }
+  dim(G) {
+    for (let m = 1; m <= this.size(); m++) {
+      let found = false;
+      for (let subset of subsets(this, m, true)) {
+        if (subset.is_dissociated(G)) {
+          found = true;
+          break;
+        }
+      }
+      if (!found) {
+        return m - 1;
+      }
+    }
+    return this.size();
   }
 
 
@@ -1726,6 +1793,16 @@ class Group {
     }
     return lower_bound - 1;
 
+  }
+  dim(m) {
+    let minimum = this.n;
+    for (let A of this.each_set_exact(m)) {
+    	minimum = Math.min(A.dim(this.G), minimum);
+      if (minimum == 1 || (minimum == 2 && m >=4)) {
+        break;
+      }
+    }
+    return minimum;
   }
   // chapter g
   mu(args) {

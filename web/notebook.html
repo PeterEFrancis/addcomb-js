@@ -209,7 +209,6 @@
             This notebook is for direct use of the functions provided in AddComb.js.
             For verbose printing of functions, use the variable <code>verbose</code>.
             The <code>print()</code> function can be used to print to the cell output.
-            <button onclick="load_default()" class="btn btn-danger btn-xs">Load Default</button>
           </p>
         </div>
       </div>
@@ -259,13 +258,20 @@
         <div class="modal-content">
           <div class="modal-header">
             <button type="button" class="close" data-dismiss="modal">&times;</button>
-            <h4 class="modal-title">Choose *.acnb file to open</h4>
+            <h4 class="modal-title">Choose a *.acnb file to open</h4>
           </div>
           <div class="modal-body">
-            <input type='file' class='input' onchange='onChooseFile(event)' accept=".acnb"/>
+            <div id="example-files">
+              <input type="radio" id="default" name="file" value="default" checked>
+              <label for="default">&nbsp;default.acnb</label><br>
+            </div>
+            <br>
+            <input type="radio" id="upload" name="file" value="upload" onchange="if (this.checked && !file) document.getElementById('load').disabled = true;">
+            <label for="upload">&nbsp; Upload</label><br>
+            <input id="upload-file" type='file' class='input' onchange='onChooseFile(event)' accept=".acnb"/>
           </div>
           <div class="modal-footer">
-            <button id="load" type="button" class="btn btn-warning" disabled onclick="$('#open-modal').modal('hide');load();">Load</button>
+            <button id="load" type="button" class="btn btn-warning" onclick="$('#open-modal').modal('hide'); load();">Load</button>
           </div>
         </div>
 
@@ -277,13 +283,6 @@
 
 
     <script>
-
-      function insert(arr, index, el) {
-        return [...arr.slice(0,index), el, ...arr.slice(index)];
-      }
-      function remove(arr, index) {
-        return [...arr.slice(0, index), ...arr.slice(1 + index)];
-      }
 
       const DEFAULT = [null,
         {
@@ -305,6 +304,52 @@
           state: "clear"
         }
       ];
+
+
+      var examples = {
+        'default':DEFAULT,
+        'dim_finder':'',
+        'do_two_elements_span':'',
+        'sumset_generator':'',
+        'checkerboard_lemma':''
+      };
+
+
+      for (let name in examples) {
+        if (name == 'default') continue;
+        $.get('example_notebooks/' + name + '.acnb',  function(response) {
+          examples[name] = JSON.parse(response);
+        })
+        let list = document.getElementById('example-files');
+        let input = document.createElement('input');
+        input.onchange = function() {
+          document.getElementById('load').disabled = false;
+        }
+        input.type = "radio";
+        input.setAttribute('id', name);
+        input.setAttribute('name', 'file');
+        input.value = name;
+        let label = document.createElement('label');
+        label.setAttribute('for', name);
+        label.innerHTML = "&nbsp; " + name + ".acnb";
+        list.appendChild(input);
+        list.appendChild(label);
+        list.appendChild(document.createElement('br'));
+      }
+
+
+
+
+
+
+
+      function insert(arr, index, el) {
+        return [...arr.slice(0,index), el, ...arr.slice(index)];
+      }
+      function remove(arr, index) {
+        return [...arr.slice(0, index), ...arr.slice(1 + index)];
+      }
+
 
       function load_default() {
         contents = DEFAULT;
@@ -718,6 +763,11 @@
 
       var file;
       function onChooseFile(event) {
+        if (event.target.files.length == 0) {
+          return;
+        }
+        document.getElementById('upload').checked = true;
+        document.getElementById('load').disabled = true;
         if (typeof window.FileReader !== 'function')
           throw ("The file API isn't supported on this browser.");
         let input = event.target;
@@ -734,13 +784,20 @@
 
 
       function load() {
-        var fr = new FileReader();
-        fr.onload = function(e) {
+        let option = [...document.getElementsByName('file')].filter(x=>x.checked)[0].value;
+        if (option == 'upload') {
+          var fr = new FileReader();
+          fr.onload = function(e) {
+            deselect();
+            contents = JSON.parse(e.target.result);
+            build_page_from_contents();
+          }
+          fr.readAsText(file);
+        } else {
           deselect();
-          contents = JSON.parse(e.target.result);
+          contents = JSON.parse(JSON.stringify(examples[option]));
           build_page_from_contents();
         }
-        fr.readAsText(file);
       }
 
       function get_string_contents() {
