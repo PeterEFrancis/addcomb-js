@@ -1311,16 +1311,17 @@ function parse_args(func, arg) {
     }
   } else { // All the other funcs are 1 argument
     if (arg.match(ONE_ARG_REG)) {
+      // do nothing
     } else if (arg.match(ONE_ARG_INTV_REG)) {
       if (func === "sigma") {
         // Special case
         let special_regex = /\[(\d+),\d+\]$/;
         let match = special_regex.exec(arg);
         let lower_bound = match[1];
-        if (lower_bound !== '0') {
+        if (lower_bound != '0') {
           throw new Error("Sigma interval only allows a lower bound of 0 (" + lower_bound + " is not allowed)");
         } else {
-          arg = arg.replace("[", "").replace("]", "").replace(",0,", ",");
+          arg = arg.replace(",0,", ","); // .replace("[", "").replace("]", "")
         }
       }
     } else {
@@ -1989,6 +1990,7 @@ var comp_purposes = {
     };
     let group = new Group(sizes, info.verbose ? verbose_element : false);
     let args = parse_args(info.func, info.arg);
+
     args.restricted = info.restricted;
     args.signed = info.signed;
     args.verbose = info.verbose;
@@ -2084,5 +2086,4 @@ self.onmessage = function (msg) {
       error: e
     });
   }
-
 }
