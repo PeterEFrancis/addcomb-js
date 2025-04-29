@@ -486,8 +486,8 @@
           ]
         },
         'add': {
-          signature: 'new FastSet(<0>).add(<1>).contents',
-        },
+          signature: 'var fs = new FastSet(<0>).add(<1>)'
+        }
       },
       'Chapter A': {
         'nu_restricted_cyclic': {
@@ -588,7 +588,72 @@
             // {in: [28,15,2], out: 26, note: 'pg. 167'},
           ]
         }
+      },
+      'Chapter F': {
+        'tau_signed_restricted_cyclic': {
+          signature: `new Group([<0>],<v>).tau({
+            restricted: true,
+            signed: true,
+            H: <1>,
+            verbose: true
+          })`,
+          cases: [
+            {in: [6,3], out: 3, note: 'From Jacob Terkel'},
+            {in: [7,3], out: 3, note: 'From Jacob Terkel'},
+            {in: [8,3], out: 4, note: 'From Jacob Terkel'},
+            {in: [9,3], out: 4, note: 'From Jacob Terkel'},
+            {in: [10,3], out: 5, note: 'From Jacob Terkel'},
+            {in: [11,3], out: 4, note: 'From Jacob Terkel'},
+            {in: [12,3], out: 6, note: 'From Jacob Terkel'},
+            {in: [13,3], out: 5, note: 'From Jacob Terkel'},
+            {in: [14,3], out: 7, note: 'From Jacob Terkel'},
+            {in: [15,3], out: 6, note: 'From Jacob Terkel'},
+            {in: [16,3], out: 8, note: 'From Jacob Terkel'},
+            // These take too long
+            // {in: [17,3], out: 6, note: 'From Jacob Terkel'},
+            // {in: [18,3], out: 9, note: 'From Jacob Terkel'},
+            // {in: [19,3], out: 7, note: 'From Jacob Terkel'},
+            // {in: [20,3], out: 10, note: 'From Jacob Terkel'},
+            // these were never tested
+            // {in: [25,3], out: 10, note: 'From Jacob Terkel'},
+            // {in: [27,3], out: 10, note: 'From Jacob Terkel'},
+            // {in: [43,3], out: 15, note: 'From Jacob Terkel'}
+          ]
+        },
+        'tau_signed_restricted_interval_cyclic': {
+          signature: `new Group([<0>],<v>).tau({
+            restricted: true,
+            signed: true,
+            H: <1>,
+            verbose: true
+          })`,
+          cases: [
+            {in: [4,[1,3]], out: 2, note: 'From Jacob Terkel'},
+            {in: [5,[1,3]], out: 2, note: 'From Jacob Terkel'},
+            {in: [6,[1,3]], out: 2, note: 'From Jacob Terkel'},
+            {in: [7,[1,3]], out: 2, note: 'From Jacob Terkel'},
+            {in: [8,[1,3]], out: 3, note: 'From Jacob Terkel'},
+            {in: [9,[1,3]], out: 3, note: 'From Jacob Terkel'},
+            {in: [10,[1,3]], out: 3, note: 'From Jacob Terkel'},
+            {in: [11,[1,3]], out: 3, note: 'From Jacob Terkel'},
+            {in: [12,[1,3]], out: 3, note: 'From Jacob Terkel'},
+            {in: [13,[1,3]], out: 3, note: 'From Jacob Terkel'},
+            {in: [14,[1,3]], out: 4, note: 'From Jacob Terkel'},
+            {in: [15,[1,3]], out: 4, note: 'From Jacob Terkel'},
+            {in: [16,[1,3]], out: 4, note: 'From Jacob Terkel'},
+            // These take too long
+            // {in: [17,[1,3]], out: 4, note: 'From Jacob Terkel'},
+            // {in: [18,[1,3]], out: 5, note: 'From Jacob Terkel'},
+            // {in: [19,[1,3]], out: 4, note: 'From Jacob Terkel'},
+            // {in: [20,[1,3]], out: 5, note: 'From Jacob Terkel'},
+            // These were never tested
+            // {in: [25,[1,3]], out: 5, note: 'From Jacob Terkel'},
+            // {in: [27,[1,3]], out: 6, note: 'From Jacob Terkel'},
+            // {in: [43,[1,3]], out: 8, note: 'From Jacob Terkel'}
+          ]
+        }
       }
+
     };
 
     function get_table_input_args(table, row, col) {
